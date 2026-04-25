@@ -1,4 +1,4 @@
-package com.cism.backend.dto;
+package com.cism.backend.dto.users;
 
 public record OtpDto(
     String email,

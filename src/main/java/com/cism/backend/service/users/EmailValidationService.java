@@ -1,4 +1,4 @@
-package com.cism.backend.service;
+package com.cism.backend.service.users;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

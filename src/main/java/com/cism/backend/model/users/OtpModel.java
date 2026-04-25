@@ -1,4 +1,4 @@
-package com.cism.backend.model;
+package com.cism.backend.model.users;
 
 import java.time.Instant;
 

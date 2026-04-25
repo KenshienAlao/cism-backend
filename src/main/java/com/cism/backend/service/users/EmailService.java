@@ -1,6 +1,6 @@
-package com.cism.backend.service;
+package com.cism.backend.service.users;
 
-import com.cism.backend.dto.OtpDto;
+import com.cism.backend.dto.users.OtpDto;
 import com.cism.backend.exception.BadrequestException;
 
 import jakarta.mail.internet.MimeMessage;

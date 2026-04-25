@@ -1,16 +1,15 @@
-package com.cism.backend.controller;
+package com.cism.backend.controller.users;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.cism.backend.dto.LoginDto;
-import com.cism.backend.dto.RegisterDto;
 import com.cism.backend.dto.common.Api;
-import com.cism.backend.model.AuthModel;
-import com.cism.backend.service.AuthService;
-
+import com.cism.backend.dto.users.LoginDto;
+import com.cism.backend.dto.users.RegisterDto;
+import com.cism.backend.model.users.AuthModel;
+import com.cism.backend.service.users.AuthService;
 
 import java.io.IOException;
 

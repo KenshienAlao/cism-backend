@@ -1,6 +1,6 @@
-package com.cism.backend.dto;
+package com.cism.backend.dto.users;
 
-import com.cism.backend.model.AuthModel;
+import com.cism.backend.model.users.AuthModel;
 
 public record LoginDto(
     String email, 

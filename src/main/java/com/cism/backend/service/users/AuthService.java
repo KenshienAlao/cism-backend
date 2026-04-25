@@ -1,6 +1,4 @@
-package com.cism.backend.service;
-
-import com.cism.backend.repository.RegisterRepository;
+package com.cism.backend.service.users;
 
 import java.io.IOException;
 
@@ -11,12 +9,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.cism.backend.dto.LoginDto;
-import com.cism.backend.dto.RegisterDto;
 import com.cism.backend.exception.BadrequestException;
-import com.cism.backend.model.AuthModel;
-
+import com.cism.backend.model.users.AuthModel;
+import com.cism.backend.repository.users.RegisterRepository;
 import com.cism.backend.config.JwtTokenProvider;
+import com.cism.backend.dto.users.LoginDto;
+import com.cism.backend.dto.users.RegisterDto;
+
 import jakarta.transaction.Transactional;
 
 @Service

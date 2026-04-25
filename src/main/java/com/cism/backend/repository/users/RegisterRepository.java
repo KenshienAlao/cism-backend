@@ -1,9 +1,10 @@
-package com.cism.backend.repository;
+package com.cism.backend.repository.users;
 
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.cism.backend.model.AuthModel;
+import com.cism.backend.model.users.AuthModel;
+
 import java.util.Optional;
 
 

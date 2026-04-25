@@ -1,18 +1,18 @@
-package com.cism.backend.controller;
+package com.cism.backend.controller.users;
 
-import com.cism.backend.repository.RegisterRepository;
 import java.util.Random;
 
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cism.backend.dto.OtpDto;
 import com.cism.backend.dto.common.Api;
-import com.cism.backend.service.EmailService;
-import com.cism.backend.service.EmailValidationService;
-import com.cism.backend.service.OtpService;
+import com.cism.backend.dto.users.OtpDto;
 import com.cism.backend.exception.BadrequestException;
+import com.cism.backend.repository.users.RegisterRepository;
+import com.cism.backend.service.users.EmailService;
+import com.cism.backend.service.users.EmailValidationService;
+import com.cism.backend.service.users.OtpService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -55,9 +55,11 @@ public class ResendController {
         }
 
         String otp = String.format("%06d", new Random().nextInt(1000000));
+
         otpService.storeOtp(email, otp, ipAddress);
 
         OtpDto success = emailService.sendOtpEmail(email, otp);
+        
         return ResponseEntity.ok(Api.ok("OTP sent successfully", "OTP_SENT", success));
     }
 

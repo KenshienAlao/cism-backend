@@ -1,4 +1,4 @@
-package com.cism.backend.service;
+package com.cism.backend.service.users;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;

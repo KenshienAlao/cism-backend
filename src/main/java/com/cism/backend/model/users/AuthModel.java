@@ -1,4 +1,4 @@
-package com.cism.backend.model;
+package com.cism.backend.model.users;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

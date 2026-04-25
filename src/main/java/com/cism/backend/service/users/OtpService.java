@@ -1,4 +1,4 @@
-package com.cism.backend.service;
+package com.cism.backend.service.users;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -11,10 +11,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cism.backend.dto.OtpDto;
+import com.cism.backend.dto.users.OtpDto;
 import com.cism.backend.exception.BadrequestException;
-import com.cism.backend.model.OtpModel;
-import com.cism.backend.repository.OtpRepository;
+import com.cism.backend.model.users.OtpModel;
+import com.cism.backend.repository.users.OtpRepository;
+
 import lombok.extern.slf4j.Slf4j;
 
 
