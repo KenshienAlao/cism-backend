@@ -134,7 +134,7 @@ public class CreateStallService {
 
     @Transactional
     public StallUserResponse updateUserStall(Long id, CreateUserDto entity) {
-        StallModel stall = createStallRepository.findById(id.intValue())
+        StallModel stall = createStallRepository.findById(id)
             .orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
 
         StallUsersModel user = stall.getUserList().stream().findFirst()
@@ -171,8 +171,19 @@ public class CreateStallService {
             user.getDescription(),
             user.getImage(),
             user.getOpenAt(),
-            user.getCloseAt()
+            user.getCloseAt(),
+            user.getStatus()
         );
+    }
+
+
+    @Transactional
+    public String deleteStall(Long id) {
+        StallModel stall = createStallRepository.findById(id)
+            .orElseThrow(() -> new BadrequestException("stall not found", "stall not found"));
+        createStallRepository.delete(stall);
+        return "Stall deleted successfully";
+
     }
 
 

@@ -4,15 +4,15 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record StallListResponse(
-    long id,
+    Long id,
     String licence,
     String password,
     UserModel user,
     IncomesModel incomes
 ) {
     public record UserModel(
-        long id,
-        long stallId,
+        Long id,
+        Long stallId,
         String name,
         String description,
         String image,
@@ -24,8 +24,8 @@ public record StallListResponse(
     ) {}
 
     public record IncomesModel(
-        long id,
-        long stallId,
+        Long id,
+        Long stallId,
         BigDecimal income,
         Instant earnedAt,
         Instant createdAt

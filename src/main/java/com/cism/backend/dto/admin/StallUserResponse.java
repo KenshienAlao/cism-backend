@@ -1,13 +1,14 @@
 package com.cism.backend.dto.admin;
 
 public record StallUserResponse(
-    long id,
-    long stallId,
+    Long id,
+    Long stallId,
     String name, 
     String description, 
     String image, 
     String openAt, 
-    String closeAt
+    String closeAt,
+    Boolean status
 ) {
 
 }

@@ -20,6 +20,7 @@ import com.cism.backend.model.admin.StallModel;
 import com.cism.backend.dto.admin.StallResponseDto;
 import com.cism.backend.dto.admin.StallUserResponse;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,6 +63,12 @@ public class StallsController {
         StallUserResponse success = createStallService.updateUserStall(id, entity);
         
         return ResponseEntity.ok(Api.ok("Stall updated", "STALL_UPDATED", success));
+    }
+
+    @DeleteMapping("/delete-stall/{id}")
+    public ResponseEntity<Api<String>> deleteStall(@PathVariable Long id) {
+        String succss = createStallService.deleteStall(id);
+        return ResponseEntity.ok(Api.ok(succss, "STALL_DELETED", succss));
     }
     
 }   
