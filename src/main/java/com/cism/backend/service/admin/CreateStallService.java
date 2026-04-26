@@ -143,9 +143,7 @@ public class CreateStallService {
         if (!isBlank(entity.name())) {
             user.setName(entity.name());
         }
-        if (!isBlank(entity.description())) {
-            user.setDescription(entity.description());
-        }
+        
         if (!isBlank(entity.openAt())) {
             user.setOpenAt(entity.openAt());
         }
