@@ -29,4 +29,11 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.NOT_FOUND)
             .body(Api.error(ex.getMessage(), ex.getCode(), null));
     }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Api<Object>> unauthorizedException(UnauthorizedException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(Api.error(ex.getMessage(), ex.getCode(), null));
+    }
 }

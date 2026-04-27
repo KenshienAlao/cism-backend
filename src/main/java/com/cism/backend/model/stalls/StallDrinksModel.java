@@ -1,5 +1,6 @@
 package com.cism.backend.model.stalls;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import com.cism.backend.model.admin.StallModel;
@@ -37,9 +38,9 @@ public class StallDrinksModel {
 
     @Column(unique = false, nullable = false) private String name;
 
-    @Column(unique = false, nullable = false) private String price;
+    @Column(unique = false, nullable = false) private BigDecimal price;
 
-    @Column(unique = false, nullable = false) private String stocks;
+    @Column(unique = false, nullable = false) private Integer stocks;
 
     @Column(unique = false, nullable = false) private String image;
 
