@@ -143,7 +143,7 @@ public class CreateStallService {
         if (!isBlank(entity.name())) {
             user.setName(entity.name());
         }
-        
+            
         if (entity.description() != null) {
             user.setDescription(entity.description());
         }
