@@ -30,15 +30,15 @@ import java.util.List;
 @Builder
 @Table(name = "users")
 public class AuthModel implements UserDetails {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) private long id;
 
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = true) 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<ReviewModel> reviewList;
 
-    
     @Column(unique = false, nullable = false)
     @NotBlank(message = "Username is Required")
     private String clientName;
@@ -51,8 +51,8 @@ public class AuthModel implements UserDetails {
     private String email;
 
     @Column(unique = false, nullable = false)
-    @NotBlank(message = "Password is Required") 
-    private String password;    
+    @NotBlank(message = "Password is Required")
+    private String password;
 
     @Column(unique = false, nullable = true)
     private String role;

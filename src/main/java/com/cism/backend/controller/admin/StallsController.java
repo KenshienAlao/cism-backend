@@ -36,15 +36,23 @@ public class StallsController {
     private CreateStallService createStallService;
 
     @PostMapping("/create-stall")
-    public ResponseEntity <Api<StallResponseDto>> createStall(@ModelAttribute CreateUserDto entity) throws IOException {
+    public ResponseEntity<Api<StallResponseDto>> createStall(@ModelAttribute CreateUserDto entity) throws IOException {
 
-        StallModel stall = createStallService.createStall();
+        CreateStallService.StallCreationResult result = createStallService.createStall();
+        StallModel stall = result.stall();
         CreateUserDto details = createStallService.createUserStall(entity, stall);
 
-        CreateStallDto account = new CreateStallDto(stall.getPassword(), stall.getLicence());
+        CreateStallDto account = new CreateStallDto(result.plainPassword(), stall.getLicence());
         StallResponseDto response = new StallResponseDto(account, details);
 
         return ResponseEntity.ok(Api.ok("Stall created", "STALL_CREATED", response));
+    }
+
+    @PutMapping("/reset-password/{id}")
+    public ResponseEntity<Api<CreateStallDto>> resetPassword(@PathVariable Long id) {
+        CreateStallService.StallCreationResult result = createStallService.resetPassword(id);
+        CreateStallDto response = new CreateStallDto(result.plainPassword(), result.stall().getLicence());
+        return ResponseEntity.ok(Api.ok("Password reset successfully", "PASSWORD_RESET", response));
     }
 
     @GetMapping("/get-stalls")

@@ -31,23 +31,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/resend/**").permitAll()
-                .requestMatchers("/api/admin/**").permitAll()
-                .requestMatchers("/api/auth/stall/**").permitAll()
-                .requestMatchers("/api/owner/stall/meal/**").permitAll()
-                .requestMatchers("/api/owner/stall/snack/**").permitAll()
-                .requestMatchers("/api/owner/stall/drink/**").permitAll()
-                .requestMatchers("/api/client/review/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/update-profile", "/api/auth/delete-account",
+                                "/api/auth/validate-cookie", "/api/auth/avatar",
+                                "/api/auth/stall/get-profile", "/api/auth/stall/validate-cookie")
+                        .authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/stall/**").permitAll()
+
+                        .requestMatchers("/api/resend/**").permitAll()
+                        .requestMatchers("/api/admin/**").authenticated()
+                        .requestMatchers("/api/auth/stall/**").permitAll()
+                        .requestMatchers("/api/owner/stall/**").authenticated()
+                        .requestMatchers("/api/client/review/**").permitAll()
+                        .requestMatchers("/api/user/stall/**").authenticated()
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }

@@ -8,6 +8,8 @@ import com.cism.backend.model.admin.StallModel;
 
 public interface CreateStallRepository extends JpaRepository<StallModel, Long> {
     Optional<StallModel> findById(Long id);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "userList" })
     Optional<StallModel> findByLicence(String licence);
-    Optional<StallModel> findByLicenceAndPassword(String licence, String password);
+
 }

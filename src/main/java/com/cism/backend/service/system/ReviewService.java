@@ -22,7 +22,7 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class ReviewService {
-    
+
     @Autowired
     private ReviewRepository reviewRepository;
 
@@ -44,66 +44,67 @@ public class ReviewService {
     }
 
     @Transactional
-    public ReviewResponse createReviewService(Long stallId, ReviewRequest entity) throws Exception{
+    public ReviewResponse createReviewService(Long stallId, ReviewRequest entity) throws Exception {
         String email = currentUserLicence.getCurrentUserEmail();
-        StallModel stall = createStallRepository.findById(stallId).orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
-        AuthModel user = registerRepository.findByEmail(email).orElseThrow(() -> new BadrequestException("User not found", "USER_NOT_FOUND"));
-    
-        if (!user.getEmail().equals(email)){
+        StallModel stall = createStallRepository.findById(stallId)
+                .orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
+        AuthModel user = registerRepository.findByEmail(email)
+                .orElseThrow(() -> new BadrequestException("User not found", "USER_NOT_FOUND"));
+
+        if (!user.getEmail().equals(email)) {
             throw new BadrequestException("This user not register ", "UNREGISTER");
         }
 
-        if(isBlack.isBlankLong(entity.itemId())) {
+        if (isBlack.isBlankLong(entity.itemId())) {
             throw new BadrequestException("Item not found", "ITEM_NOT_FOUND");
         }
 
-        if (isBlack.isBlank(entity.comment()) || isBlack.isBlankInteger(entity.star())){
+        if (isBlack.isBlank(entity.comment()) || isBlack.isBlankInteger(entity.star())) {
             throw new BadrequestException("Invalid review data", "INVALID_REVIEW_DATA");
         }
 
         ReviewModel review = ReviewModel.builder()
-            .stall(stall)
-            .users(user)
-            .itemId(entity.itemId())
-            .star(entity.star())
-            .comment(entity.comment())
-            .createAt(Instant.now())
-            .build();
-        
-        ReviewModel savedReview = reviewRepository.save(review);        
-        return mapToResponseDto(savedReview);  
+                .stall(stall)
+                .users(user)
+                .itemId(entity.itemId())
+                .star(entity.star())
+                .comment(entity.comment())
+                .createAt(Instant.now())
+                .build();
+
+        ReviewModel savedReview = reviewRepository.save(review);
+        return mapToResponseDto(savedReview);
     }
 
     @Transactional
     public ReviewResponse deleteReviewService(Long userId, Long reviewId) throws Exception {
         String licence = currentUserLicence.getCurrentUserLicence();
-        StallModel stall = createStallRepository.findByLicence(licence).orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
-        ReviewModel review = reviewRepository.findById(reviewId).orElseThrow(() -> new BadrequestException("Review not found", "REVIEW_NOT_FOUND"));
-       
-       
+        StallModel stall = createStallRepository.findByLicence(licence)
+                .orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
+        ReviewModel review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BadrequestException("Review not found", "REVIEW_NOT_FOUND"));
+
         if (!stall.getId().equals(review.getStall().getId())) {
             throw new BadrequestException("Unauthorized", "UNAUTHORIZED");
         }
 
-        if (!userId.equals(review.getUsers().getId())) {        
+        if (!userId.equals(review.getUsers().getId())) {
             throw new BadrequestException("Unauthorized", "UNAUTHORIZED");
         }
 
         reviewRepository.deleteById(review.getId());
-
         return mapToResponseDto(review);
-    } 
+    }
 
     private ReviewResponse mapToResponseDto(ReviewModel entity) {
         return new ReviewResponse(
-            entity.getId(),
-            entity.getStall().getId(),
-            entity.getUsers().getId(),
-            entity.getItemId(),
-            entity.getStar(),
-            entity.getComment(),
-            entity.getCreateAt()
-        );  
-    } 
-    
+                entity.getId(),
+                entity.getStall().getId(),
+                entity.getUsers().getId(),
+                entity.getItemId(),
+                entity.getStar(),
+                entity.getComment(),
+                entity.getCreateAt());
+    }
+
 }

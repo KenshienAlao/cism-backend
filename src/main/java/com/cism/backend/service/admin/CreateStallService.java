@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,7 +28,6 @@ import jakarta.transaction.Transactional;
 @Service
 public class CreateStallService {
 
-    
     @Autowired
     private CreateStallRepository createStallRepository;
 
@@ -37,16 +37,17 @@ public class CreateStallService {
     @Autowired
     private CreateStallIncomesRepository createStallIncomesRepository;
 
-
-
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     CreateStallService(CreateStallUsersRepository createStallUsersRepository, FileStorageService fileStorageService) {
         this.createStallUsersRepository = createStallUsersRepository;
         this.fileStorageService = fileStorageService;
     }
-    
+
     @Transactional
     public CreateUserDto createUserStall(CreateUserDto entity, StallModel stall) throws IOException {
 
@@ -70,6 +71,7 @@ public class CreateStallService {
                 .name(name)
                 .description(description)
                 .image(stallImage)
+                .role(entity.role())
                 .openAt(openAt)
                 .closeAt(closeAt)
                 .status(false)
@@ -84,70 +86,76 @@ public class CreateStallService {
 
         createStallUsersRepository.save(response);
         createStallIncomesRepository.save(res);
-        
-        return new CreateUserDto(name, description, image, openAt, closeAt);
+
+        return new CreateUserDto(name, description, image, openAt, closeAt, entity.role());
     }
 
-
-    @Transactional  
-    public StallModel createStall(){
+    @Transactional
+    public StallCreationResult createStall() {
 
         String licence = String.format("LIC-%06d", new Random().nextInt(1000000));
         String password = String.format("STALL-%06d", new Random().nextInt(1000000));
-     
 
         StallModel stall = StallModel.builder()
-            .licence(licence)
-            .password(password)
-            .build();
+                .licence(licence)
+                .password(passwordEncoder.encode(password))
+                .build();
 
-        return createStallRepository.save(stall);
+        return new StallCreationResult(createStallRepository.save(stall), password);
+    }
+
+    @Transactional
+    public StallCreationResult resetPassword(Long id) {
+        StallModel stall = createStallRepository.findById(id)
+                .orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
+
+        String newPassword = String.format("STALL-%06d", new Random().nextInt(1000000));
+        stall.setPassword(passwordEncoder.encode(newPassword));
+
+        return new StallCreationResult(createStallRepository.save(stall), newPassword);
     }
 
     @Transactional
     public List<StallListResponse> getAllStalls() {
         return createStallRepository.findAll().stream().map(stall -> {
-            
+
             StallListResponse.UserModel userDto = stall.getUserList().stream().findFirst()
-                .map(u -> new StallListResponse.UserModel(
-                    u.getId(), stall.getId(), u.getName(), u.getDescription(), 
-                    u.getImage(), u.getStatus(), u.getOpenAt(), u.getCloseAt(), 
-                    u.getCreatedAt(), u.getUpdatedAt()
-                )).orElse(null);
+                    .map(u -> new StallListResponse.UserModel(
+                            u.getId(), stall.getId(), u.getName(), u.getDescription(),
+                            u.getImage(), u.getStatus(), u.getOpenAt(), u.getCloseAt(),
+                            u.getRole(),
+                            u.getCreatedAt(), u.getUpdatedAt()))
+                    .orElse(null);
 
             StallListResponse.IncomesModel incomeDto = stall.getIncomeList().stream().findFirst()
-                .map(i -> new StallListResponse.IncomesModel(
-                    i.getId(), stall.getId(), i.getIncome(), i.getEarnedAt(), i.getCreatedAt()
-                )).orElse(null);
+                    .map(i -> new StallListResponse.IncomesModel(
+                            i.getId(), stall.getId(), i.getIncome(), i.getEarnedAt(), i.getCreatedAt()))
+                    .orElse(null);
 
-                
             return new StallListResponse(
-                stall.getId(), 
-                stall.getLicence(), 
-                stall.getPassword(), 
-                userDto, 
-                incomeDto
-            );
+                    stall.getId(),
+                    stall.getLicence(),
+                    userDto,
+                    incomeDto);
         }).toList();
     }
-
 
     @Transactional
     public StallUserResponse updateUserStall(Long id, CreateUserDto entity) {
         StallModel stall = createStallRepository.findById(id)
-            .orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
+                .orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
 
         StallUsersModel user = stall.getUserList().stream().findFirst()
-            .orElseThrow(() -> new BadrequestException("Stall user details not found", "USER_NOT_FOUND"));
+                .orElseThrow(() -> new BadrequestException("Stall user details not found", "USER_NOT_FOUND"));
 
         if (!isBlank(entity.name())) {
             user.setName(entity.name());
         }
-            
+
         if (entity.description() != null) {
             user.setDescription(entity.description());
         }
-        
+
         if (!isBlank(entity.openAt())) {
             user.setOpenAt(entity.openAt());
         }
@@ -167,34 +175,35 @@ public class CreateStallService {
         createStallUsersRepository.save(user);
 
         return new StallUserResponse(
-            user.getId(),
-            stall.getId(),
-            user.getName(),
-            user.getDescription(),
-            user.getImage(),
-            user.getOpenAt(),
-            user.getCloseAt(),
-            user.getStatus()
-        );
+                user.getId(),
+                user.getStall().getId(),
+                user.getName(),
+                user.getDescription(),
+                user.getImage(),
+                user.getOpenAt(),
+                user.getCloseAt(),
+                user.getStatus(),
+                user.getRole());
     }
-
 
     @Transactional
     public String deleteStall(Long id) {
         StallModel stall = createStallRepository.findById(id)
-            .orElseThrow(() -> new BadrequestException("stall not found", "stall not found"));
+                .orElseThrow(() -> new BadrequestException("stall not found", "stall not found"));
         createStallRepository.delete(stall);
         return "Stall deleted successfully";
 
     }
 
-
-    public boolean isBlank(String entity){
+    public boolean isBlank(String entity) {
         return entity == null || entity.isBlank();
     }
 
-    public boolean isBlankMultipartFile(MultipartFile entity){
+    public boolean isBlankMultipartFile(MultipartFile entity) {
         return entity == null || entity.isEmpty();
+    }
+
+    public record StallCreationResult(StallModel stall, String plainPassword) {
     }
 
 }

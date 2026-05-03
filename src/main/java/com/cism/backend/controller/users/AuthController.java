@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.cism.backend.dto.common.Api;
 import com.cism.backend.dto.users.LoginDto;
 import com.cism.backend.dto.users.RegisterDto;
+import com.cism.backend.dto.users.UpdateUserDto;
 import com.cism.backend.model.users.AuthModel;
 import com.cism.backend.service.users.AuthService;
 
@@ -28,33 +29,33 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 
-
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
     private AuthService authService;
-    
+
     @Autowired
     private CookieUtil cookieUtil;
-    
+
     @Autowired
     private JwtTokenProvider tokenProvider;
 
     @PostMapping("/register")
-    public ResponseEntity<Api<RegisterDto>> register(@RequestBody RegisterDto entity) throws Exception {  
+    public ResponseEntity<Api<RegisterDto>> register(@RequestBody RegisterDto entity) throws Exception {
         RegisterDto success = authService.registerService(entity);
         return ResponseEntity.ok(Api.ok("User registered successfully", "USER_REGISTERED", success));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Api<LoginDto>> login(@RequestBody LoginDto entity, HttpServletResponse response) throws Exception {
+    public ResponseEntity<Api<LoginDto>> login(@RequestBody LoginDto entity, HttpServletResponse response)
+            throws Exception {
         LoginDto success = authService.loginService(entity);
-        
+
         cookieUtil.addCookie(response, "access_token", success.accessToken(), tokenProvider.getJwtExpirationInMs());
-        cookieUtil.addCookie(response, "refresh_token", success.refreshToken(), tokenProvider.getRefreshTokenExpirationInMs());
+        cookieUtil.addCookie(response, "refresh_token", success.refreshToken(),
+                tokenProvider.getRefreshTokenExpirationInMs());
 
         return ResponseEntity.ok(Api.ok("Login success", "LOGIN_SUCCESS", success));
     }
@@ -66,8 +67,16 @@ public class AuthController {
         return ResponseEntity.ok(Api.ok("Logged out successfully", "LOGOUT_SUCCESS", null));
     }
 
+    @PatchMapping("/update-profile")
+    public ResponseEntity<Api<UpdateUserDto>> updateProfile(@RequestBody UpdateUserDto entity) throws Exception {
+        System.out.println("RENDERED: " + entity);
+
+        UpdateUserDto success = authService.updateProfileService(entity);
+        return ResponseEntity.ok(Api.ok("Update user profile successfully", "UPDATE_USER_PROFILE_SUCCESS", success));
+    }
+
     @DeleteMapping("/delete-account")
-    public ResponseEntity<Api<String>> deleteAccount(HttpServletResponse response) {
+    public ResponseEntity<Api<String>> deleteAccount(HttpServletResponse response) throws Exception {
         authService.deleteAccountService();
         cookieUtil.clearCookie(response, "access_token");
         cookieUtil.clearCookie(response, "refresh_token");
@@ -75,7 +84,7 @@ public class AuthController {
     }
 
     @GetMapping("/validate-cookie")
-    public ResponseEntity<Api<LoginDto>> validateCookie() {
+    public ResponseEntity<Api<LoginDto>> validateCookie() throws Exception {
         AuthModel user = authService.validateCookieService();
         if (user == null) {
             return ResponseEntity.ok(Api.error("Not authenticated", "UNAUTHENTICATED", null));
@@ -85,13 +94,14 @@ public class AuthController {
     }
 
     @PatchMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity <Api<String>> updateAvatar(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<Api<String>> updateAvatar(@RequestParam("file") MultipartFile file) throws IOException {
         String avatarUrl = authService.updateAvatarService(file);
         return ResponseEntity.ok(Api.ok("Avatar updated", "AVATAR_UPDATED", avatarUrl));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<Api<LoginDto>> refresh(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<Api<LoginDto>> refresh(HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -106,8 +116,9 @@ public class AuthController {
         LoginDto success = authService.refreshAccessTokenService(refreshToken);
 
         cookieUtil.addCookie(response, "access_token", success.accessToken(), tokenProvider.getJwtExpirationInMs());
-        cookieUtil.addCookie(response, "refresh_token", success.refreshToken(), tokenProvider.getRefreshTokenExpirationInMs());
+        cookieUtil.addCookie(response, "refresh_token", success.refreshToken(),
+                tokenProvider.getRefreshTokenExpirationInMs());
 
         return ResponseEntity.ok(Api.ok("Token refreshed", "TOKEN_REFRESH_SUCCESS", success));
     }
- }
+}

@@ -1,12 +1,9 @@
-package com.cism.backend.model.system.review;
+package com.cism.backend.model.stalls;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import com.cism.backend.model.admin.StallModel;
-import com.cism.backend.model.users.AuthModel;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,37 +18,51 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "review_users")
-public class ReviewModel {
+@Table(name = "stall_items")
+public class StallItemModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "stall_id", nullable = false)
     private StallModel stall;
 
-    @ManyToOne
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "users_id", nullable = false)
-    private AuthModel users;
+    @Column(unique = false, nullable = false)
+    private String name;
 
     @Column(unique = false, nullable = false)
-    private Long itemId;
+    private BigDecimal price;
 
     @Column(unique = false, nullable = false)
-    private Integer star;
+    private Integer stocks;
+
+    @Column(unique = false, nullable = true)
+    private String image;
 
     @Column(unique = false, nullable = false)
-    private String comment;
+    private String category;
 
     @Column(unique = false, nullable = false)
-    private Instant createAt;
+    private Integer sold;
+
+    @Column(unique = false, nullable = false)
+    private Integer previousSold;
+
+    @Column(unique = false, nullable = false)
+    private Instant createdAt;
+
+    @Column(unique = false, nullable = false)
+    private Instant updatedAt;
+
 }

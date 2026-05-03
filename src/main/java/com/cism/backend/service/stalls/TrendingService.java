@@ -4,9 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.cism.backend.repository.stalls.StallDrinksRepository;
-import com.cism.backend.repository.stalls.StallMealsRepository;
-import com.cism.backend.repository.stalls.StallSnacksRepository;
+import com.cism.backend.repository.stalls.StallItemRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -16,13 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TrendingService {
 
     @Autowired
-    private StallMealsRepository stallMealsRepository;
-
-    @Autowired
-    private StallDrinksRepository stallDrinksRepository;
-
-    @Autowired
-    private StallSnacksRepository stallSnacksRepository;
+    private StallItemRepository stallItemRepository;
 
     /**
      * Snapshots the current 'sold' count into 'previousSold' and resets 'sold' to 0.
@@ -32,27 +24,12 @@ public class TrendingService {
     @Scheduled(cron = "0 0 0 * * SUN")
     @Transactional
     public void snapshotWeeklySales() {
-        log.info("Starting weekly sales snapshot...");
+        log.info("Starting weekly sales snapshot for all items...");
 
-        // Snapshot Meals
-        stallMealsRepository.findAll().forEach(meal -> {
-            meal.setPreviousSold(meal.getSold());
-            meal.setSold(0);
-            stallMealsRepository.save(meal);
-        });
-
-        // Snapshot Drinks
-        stallDrinksRepository.findAll().forEach(drink -> {
-            drink.setPreviousSold(drink.getSold());
-            drink.setSold(0);
-            stallDrinksRepository.save(drink);
-        });
-
-        // Snapshot Snacks
-        stallSnacksRepository.findAll().forEach(snack -> {
-            snack.setPreviousSold(snack.getSold());
-            snack.setSold(0);
-            stallSnacksRepository.save(snack);
+        stallItemRepository.findAll().forEach(item -> {
+            item.setPreviousSold(item.getSold());
+            item.setSold(0);
+            stallItemRepository.save(item);
         });
 
         log.info("Weekly sales snapshot completed.");

@@ -8,7 +8,8 @@ public record CreateUserDto(
     String description,
     MultipartFile image,
     String openAt,
-    String closeAt
+    String closeAt,
+    String role
 ) {
     
 }

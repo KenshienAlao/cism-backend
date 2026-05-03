@@ -30,6 +30,7 @@ public record OwnerStallDto(
         Boolean status,
         String openAt,
         String closeAt,
+        String role,
         Instant createdAt,
         Instant updatedAt
     ) {}

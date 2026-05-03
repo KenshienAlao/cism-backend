@@ -14,10 +14,8 @@ import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.cism.backend.model.stalls.StallDrinksModel;
+import com.cism.backend.model.stalls.StallItemModel;
 import com.cism.backend.model.stalls.StallIncomesModel;
-import com.cism.backend.model.stalls.StallMealsModel;
-import com.cism.backend.model.stalls.StallSnacksModel;
 import com.cism.backend.model.stalls.StallUsersModel;
 import com.cism.backend.model.system.review.ReviewModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -41,25 +39,18 @@ import java.util.Collections;
 public class StallModel implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<StallMealsModel> mealList;
-
-    @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<StallDrinksModel> drinkList;
-
-    @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<StallSnacksModel> snackList;
+    private List<StallItemModel> itemList;
 
     @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<StallUsersModel> userList;
 
-    @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true) 
+    @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<ReviewModel> reviewList;
 
@@ -67,15 +58,21 @@ public class StallModel implements UserDetails {
     @JsonIgnore
     private List<StallIncomesModel> incomeList;
 
+    @Column(unique = true, nullable = false)
+    private String licence;
+    @Column(unique = true, nullable = false)
+    private String password;
 
-    @Column(unique = true, nullable = false) private String licence;
-    @Column(unique = true, nullable = false) private String password;
-    
-    @Column(nullable = false) @CreationTimestamp private Instant createdAt;
-    
+    @Column(nullable = false)
+    @CreationTimestamp
+    private Instant createdAt;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_STALL"));
+        String userRole = (userList != null && !userList.isEmpty() && userList.get(0).getRole() != null)
+                ? userList.get(0).getRole()
+                : "STALL";
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + userRole));
     }
 
     @Override
