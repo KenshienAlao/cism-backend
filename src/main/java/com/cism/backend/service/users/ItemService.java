@@ -31,10 +31,6 @@ public class ItemService {
 
     @Transactional
     public List<AllStallDto> getAllItem() {
-        String email = currentUserLicence.getCurrentUserEmail();
-        registerRepository.findByEmail(email)
-                .orElseThrow(() -> new BadrequestException("User not found! please login again.", "USER_NOT_FOUND"));
-
         return createStallRepository.findAll().stream()
                 .map(this::mapToAllStallDto)
                 .toList();

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cism.backend.exception.BadrequestException;
+import com.cism.backend.exception.UnauthorizedException;
 import com.cism.backend.model.users.AuthModel;
 import com.cism.backend.repository.users.RegisterRepository;
 import com.cism.backend.util.CurrentUserLicence;
@@ -168,12 +169,12 @@ public class AuthService {
 
     public LoginDto refreshAccessTokenService(String refreshToken) {
         if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
-            throw new BadrequestException("Invalid refresh token", "INVALID_REFRESH_TOKEN");
+            throw new UnauthorizedException("Invalid or missing refresh token", "INVALID_REFRESH_TOKEN");
         }
 
         String email = jwtTokenProvider.getUsernameFromJWT(refreshToken);
         AuthModel user = registerRepository.findByEmail(email)
-                .orElseThrow(() -> new BadrequestException("User not found", "USER_NOT_FOUND"));
+                .orElseThrow(() -> new UnauthorizedException("User not found", "USER_NOT_FOUND"));
 
         String newAccessToken = jwtTokenProvider.generateToken(user.getEmail());
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
