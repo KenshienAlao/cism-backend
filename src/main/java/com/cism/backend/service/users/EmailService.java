@@ -36,7 +36,7 @@ public class EmailService {
             mailSender.send(message);
             log.info("OTP email successfully sent to {}", to);
         } catch (Exception e) {
-            log.error("CRITICAL: Failed to send OTP email to {}: {}", to, e.getMessage());
+            log.error("CRITICAL: Failed to send OTP email to {}", to, e);
         }
     }
 }
