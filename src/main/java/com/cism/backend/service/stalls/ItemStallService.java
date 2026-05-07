@@ -58,14 +58,15 @@ public class ItemStallService {
 
         if (!hasVariations) {
             if (isBlack.isBlankBigDecimal(entity.price()) || entity.stocks() == null) {
-                throw new BadrequestException("Price and stocks are required when no variations are added", "PRICE_STOCKS_REQUIRED");
+                throw new BadrequestException("Price and stocks are required when no variations are added",
+                        "PRICE_STOCKS_REQUIRED");
             }
         }
 
         String imageUrl = null;
         try {
             if (entity.imageFile() != null && !entity.imageFile().isEmpty()) {
-                imageUrl = fileStorageService.stallImage(entity.imageFile());
+                imageUrl = fileStorageService.stallItemImage(entity.imageFile());
             } else if (entity.image() != null && !entity.image().isBlank()) {
                 imageUrl = entity.image();
             }
@@ -93,7 +94,7 @@ public class ItemStallService {
                 String varImageUrl = null;
                 try {
                     if (varDto.imageFile() != null && !varDto.imageFile().isEmpty()) {
-                        varImageUrl = fileStorageService.stallImage(varDto.imageFile());
+                        varImageUrl = fileStorageService.stallItemImage(varDto.imageFile());
                     } else if (varDto.image() != null && !varDto.image().isBlank()) {
                         varImageUrl = varDto.image();
                     }
@@ -127,7 +128,7 @@ public class ItemStallService {
 
         if (entity.imageFile() != null && !entity.imageFile().isEmpty()) {
             try {
-                item.setImage(fileStorageService.stallImage(entity.imageFile()));
+                item.setImage(fileStorageService.stallItemImage(entity.imageFile()));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -141,12 +142,12 @@ public class ItemStallService {
 
         if (entity.variations() != null) {
             item.getItemVariations().clear();
-            
+
             for (RequestItemVariationDto varDto : entity.variations()) {
                 String varImageUrl = null;
                 try {
                     if (varDto.imageFile() != null && !varDto.imageFile().isEmpty()) {
-                        varImageUrl = fileStorageService.stallImage(varDto.imageFile());
+                        varImageUrl = fileStorageService.stallItemImage(varDto.imageFile());
                     } else if (varDto.image() != null && !varDto.image().isBlank()) {
                         varImageUrl = varDto.image();
                     }
@@ -195,7 +196,7 @@ public class ItemStallService {
         String imageUrl = null;
         if (entity.imageFile() != null && !entity.imageFile().isEmpty()) {
             try {
-                imageUrl = fileStorageService.stallImage(entity.imageFile());
+                imageUrl = fileStorageService.stallItemImage(entity.imageFile());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -227,7 +228,8 @@ public class ItemStallService {
     }
 
     @Transactional
-    public ItemVariationsResponse updateVariationService(Long variationId, ItemVariationsRequest entity) throws Exception {
+    public ItemVariationsResponse updateVariationService(Long variationId, ItemVariationsRequest entity)
+            throws Exception {
         String licence = currentUserLicence.getCurrentUserLicence();
         StallModel stallModel = createStallRepository.findByLicence(licence)
                 .orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
@@ -242,7 +244,7 @@ public class ItemStallService {
         String imageUrl = variation.getImage(); // keep existing by default
         if (entity.imageFile() != null && !entity.imageFile().isEmpty()) {
             try {
-                imageUrl = fileStorageService.stallImage(entity.imageFile());
+                imageUrl = fileStorageService.stallItemImage(entity.imageFile());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -320,7 +322,8 @@ public class ItemStallService {
 
         if (!hasVariations) {
             if (isBlack.isBlankBigDecimal(entity.price()) || entity.stocks() == null) {
-                throw new BadrequestException("Price and stocks are required when no variations are added", "PRICE_STOCKS_REQUIRED");
+                throw new BadrequestException("Price and stocks are required when no variations are added",
+                        "PRICE_STOCKS_REQUIRED");
             }
         }
         return item;
@@ -339,9 +342,9 @@ public class ItemStallService {
                 entity.getPreviousSold(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
-                entity.getItemVariations() != null 
-                    ? entity.getItemVariations().stream().map(this::mapToVariationResponseDto).toList()
-                    : java.util.List.of());
+                entity.getItemVariations() != null
+                        ? entity.getItemVariations().stream().map(this::mapToVariationResponseDto).toList()
+                        : java.util.List.of());
     }
 
     private ItemVariationsResponse mapToVariationResponseDto(ItemVariationsModel entity) {

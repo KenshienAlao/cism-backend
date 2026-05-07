@@ -155,7 +155,7 @@ public class AuthService {
                 .getAuthentication()
                 .getPrincipal();
 
-        String avatarUrl = fileStorageService.store(file, String.valueOf(user.getId()));
+        String avatarUrl = fileStorageService.customerAvatar(file, String.valueOf(user.getId()));
 
         user.setAvatar(avatarUrl);
         registerRepository.save(user);
