@@ -33,6 +33,7 @@ public class ReviewController {
 
     @PostMapping("/review-item")
     public ResponseEntity<Api<ReviewResponse>> reviewItem(@RequestBody ReviewRequest entity) throws Exception {
+        System.out.println("Review : " + entity);
         ReviewResponse success = reviewService.createReviewService(entity);
         return ResponseEntity.ok(Api.ok("Review item success", "REVIEW_ITEM_SUCCESS", success));
     }

@@ -26,12 +26,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-
-
 @RestController
 @RequestMapping("/api/admin")
 public class StallsController {
-    
+
     @Autowired
     private CreateStallService createStallService;
 
@@ -64,10 +62,9 @@ public class StallsController {
     }
 
     @PutMapping("/update-stall/{id}")
-    public ResponseEntity<Api<StallUserResponse>> updateStall(@PathVariable Long id, @ModelAttribute CreateUserDto entity) {
-            
+    public ResponseEntity<Api<StallUserResponse>> updateStall(@PathVariable Long id,
+            @ModelAttribute CreateUserDto entity) throws IOException {
         StallUserResponse success = createStallService.updateUserStall(id, entity);
-        
         return ResponseEntity.ok(Api.ok("Stall updated", "STALL_UPDATED", success));
     }
 
@@ -76,5 +73,5 @@ public class StallsController {
         String succss = createStallService.deleteStall(id);
         return ResponseEntity.ok(Api.ok(succss, "STALL_DELETED", succss));
     }
-    
-}   
+
+}

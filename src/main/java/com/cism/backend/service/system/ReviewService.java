@@ -9,7 +9,9 @@ import com.cism.backend.exception.BadrequestException;
 import com.cism.backend.model.admin.StallModel;
 import com.cism.backend.model.system.review.ReviewModel;
 import com.cism.backend.model.users.AuthModel;
+import com.cism.backend.model.stalls.StallItemModel;
 import com.cism.backend.repository.admin.CreateStallRepository;
+import com.cism.backend.repository.stalls.StallItemRepository;
 import com.cism.backend.repository.system.ReviewRepository;
 import com.cism.backend.repository.users.RegisterRepository;
 import com.cism.backend.util.CurrentUserLicence;
@@ -38,6 +40,9 @@ public class ReviewService {
     @Autowired
     private CreateStallRepository createStallRepository;
 
+    @Autowired
+    private StallItemRepository stallItemRepository;
+
     @Transactional
     public List<ReviewResponse> getAllReview() throws Exception {
         return reviewRepository.findAll().stream().map(this::mapToResponseDto).toList();
@@ -63,10 +68,18 @@ public class ReviewService {
             throw new BadrequestException("Invalid review data", "INVALID_REVIEW_DATA");
         }
 
+        if (reviewRepository.findByStallitemIdAndStallIdAndUsersId(entity.itemId(), entity.stallId(), user.getId())
+                .isPresent()) {
+            throw new BadrequestException("You have already reviewed this item", "ALREADY_REVIEWED");
+        }
+
+        StallItemModel item = stallItemRepository.findById(entity.itemId())
+                .orElseThrow(() -> new BadrequestException("Item not found", "ITEM_NOT_FOUND"));
+
         ReviewModel review = ReviewModel.builder()
                 .stall(stall)
                 .users(user)
-                .itemId(entity.itemId())
+                .stallitem(item)
                 .star(entity.star())
                 .comment(entity.comment())
                 .createAt(Instant.now())
@@ -102,7 +115,7 @@ public class ReviewService {
                 new ReviewResponse.User(user.getClientName(), user.getAvatar(), user.getRole()),
                 entity.getComment(),
                 entity.getStar(),
-                entity.getItemId(),
+                entity.getStallitem().getId(),
                 entity.getCreateAt());
     }
 

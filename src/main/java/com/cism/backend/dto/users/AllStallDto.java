@@ -1,7 +1,9 @@
 package com.cism.backend.dto.users;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
+import com.cism.backend.dto.stall.ItemVariationsResponse;
 
 public record AllStallDto(
                 Long id,
@@ -13,7 +15,8 @@ public record AllStallDto(
                 String role,
                 Boolean status,
                 List<Review> reviews,
-                List<Item> items) {
+                List<Item> items,
+                Instant createdAt) {
 
         public record Review(
                         Long id,
@@ -38,7 +41,8 @@ public record AllStallDto(
                         BigDecimal price,
                         Integer stocks,
                         String image,
-                        String category) {
+                        String category,
+                        List<ItemVariationsResponse> variations) {
         }
 
 }

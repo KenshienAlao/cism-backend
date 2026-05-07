@@ -3,6 +3,8 @@ package com.cism.backend.dto.stall;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import java.util.List;
+
 public record ResponseItemDto(
         Long id,
         Long stallId,
@@ -14,5 +16,6 @@ public record ResponseItemDto(
         Integer sold,
         Integer previousSold,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        List<ItemVariationsResponse> variations) {
 }

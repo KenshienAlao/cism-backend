@@ -6,10 +6,13 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.cism.backend.dto.stall.ItemVariationsResponse;
 import com.cism.backend.dto.users.AllStallDto;
 import com.cism.backend.model.admin.StallModel;
+import com.cism.backend.model.stalls.ItemVariationsModel;
 import com.cism.backend.model.stalls.StallItemModel;
 import com.cism.backend.model.stalls.StallUsersModel;
+import com.cism.backend.model.system.review.ReviewModel;
 import com.cism.backend.repository.admin.CreateStallRepository;
 
 import jakarta.transaction.Transactional;
@@ -40,20 +43,23 @@ public class ItemService {
                                                 i.getPrice(),
                                                 i.getStocks(),
                                                 i.getImage(),
-                                                i.getCategory()))
+                                                i.getCategory(),
+                                                i.getItemVariations() != null
+                                                                ? i.getItemVariations().stream().map(this::mapVariation)
+                                                                                .toList()
+                                                                : List.of()))
                                 .toList();
 
                 List<AllStallDto.Review> reviews = (stall.getReviewList() != null ? stall.getReviewList().stream()
-                                : java.util.stream.Stream.<com.cism.backend.model.system.review.ReviewModel>empty())
+                                : Stream.<ReviewModel>empty())
                                 .map(r -> new AllStallDto.Review(
                                                 r.getId(),
-                                                r.getItemId(),
+                                                r.getStallitem().getId(),
                                                 r.getUsers() != null ? r.getUsers().getId() : null,
                                                 r.getUsers() != null ? new AllStallDto.User(
-                                                        r.getUsers().getClientName(),
-                                                        r.getUsers().getAvatar(),
-                                                        r.getUsers().getRole()
-                                                ) : null,
+                                                                r.getUsers().getClientName(),
+                                                                r.getUsers().getAvatar(),
+                                                                r.getUsers().getRole()) : null,
                                                 r.getStar(),
                                                 r.getComment(),
                                                 r.getCreateAt()))
@@ -69,6 +75,16 @@ public class ItemService {
                                 profile != null ? profile.getRole() : "STALL",
                                 profile != null ? profile.getStatus() : false,
                                 reviews,
-                                items);
+                                items,
+                                stall.getCreatedAt());
+        }
+
+        private ItemVariationsResponse mapVariation(ItemVariationsModel v) {
+                return new ItemVariationsResponse(
+                                v.getId(),
+                                v.getName(),
+                                v.getStock(),
+                                v.getPrice(),
+                                v.getImage());
         }
 }

@@ -1,15 +1,13 @@
 package com.cism.backend.model.system.review;
 
-import java.time.Instant;
-
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import com.cism.backend.model.admin.StallModel;
 import com.cism.backend.model.stalls.StallItemModel;
+import com.cism.backend.model.stalls.ItemVariationsModel;
 import com.cism.backend.model.users.AuthModel;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,17 +25,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "review_users")
-public class ReviewModel {
+@Table(name = "cart_users")
+public class CartModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "stall_id", nullable = false)
-    private StallModel stall;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -46,15 +39,19 @@ public class ReviewModel {
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "stall_id", nullable = false)
+    private StallModel stall;
+
+    @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "stall_item_id", nullable = false)
-    private StallItemModel stallitem;
+    private StallItemModel stallItem;
 
-    @Column(unique = false, nullable = false)
-    private Integer star;
+    @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "variation_id", nullable = true)
+    private ItemVariationsModel variation;
 
-    @Column(unique = false, nullable = false)
-    private String comment;
+    private Integer quantity;
 
-    @Column(unique = false, nullable = false)
-    private Instant createAt;
 }

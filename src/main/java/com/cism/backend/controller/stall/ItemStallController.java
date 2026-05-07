@@ -4,6 +4,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cism.backend.dto.common.Api;
+import com.cism.backend.dto.stall.ItemVariationsRequest;
+import com.cism.backend.dto.stall.ItemVariationsResponse;
 import com.cism.backend.dto.stall.RequestItemDto;
 import com.cism.backend.dto.stall.ResponseItemDto;
 import com.cism.backend.service.stalls.ItemStallService;
@@ -45,6 +47,36 @@ public class ItemStallController {
     public ResponseEntity<Api<String>> deleteItem(@PathVariable Long id) throws Exception {
         itemStallService.deleteMealService(id);
         return ResponseEntity.ok(Api.ok("Item successfully deleted", "SUCCESS_DELETED", null));
+    }
+
+    // item variations
+
+    @PostMapping("/add-variation/{id}")
+    public ResponseEntity<Api<ItemVariationsResponse>> addVariationsController(
+            @PathVariable Long id,
+            @ModelAttribute ItemVariationsRequest entity)
+            throws Exception {
+
+        System.out.println("Rendered : " + entity);
+        ItemVariationsResponse success = itemStallService.addVariationsService(id, entity);
+        return ResponseEntity.ok(Api.ok("Add variations success", "ADD_VARIATIONS_SUCCESS", success));
+    }
+
+    @PutMapping("/update-variation/{id}")
+    public ResponseEntity<Api<ItemVariationsResponse>> updateVariationController(
+            @PathVariable Long id,
+            @ModelAttribute ItemVariationsRequest entity)
+            throws Exception {
+        ItemVariationsResponse success = itemStallService.updateVariationService(id, entity);
+        return ResponseEntity.ok(Api.ok("Update variation success", "UPDATE_VARIATION_SUCCESS", success));
+    }
+
+    @DeleteMapping("/delete-variation/{id}")
+    public ResponseEntity<Api<ItemVariationsResponse>> deleteVariationController(
+            @PathVariable Long id)
+            throws Exception {
+        ItemVariationsResponse success = itemStallService.deleteVariationService(id);
+        return ResponseEntity.ok(Api.ok("Delete variation success", "DELETE_VARIATION_SUCCESS", success));
     }
 
 }

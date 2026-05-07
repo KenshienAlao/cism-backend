@@ -2,9 +2,12 @@ package com.cism.backend.model.stalls;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 import com.cism.backend.model.admin.StallModel;
+import com.cism.backend.model.system.review.ReviewModel;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +35,14 @@ public class StallItemModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "stallitem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemVariationsModel> itemVariations = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "stallitem", cascade = CascadeType.ALL)
+    private List<ReviewModel> reviews;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -41,10 +52,10 @@ public class StallItemModel {
     @Column(unique = false, nullable = false)
     private String name;
 
-    @Column(unique = false, nullable = false)
+    @Column(unique = false, nullable = true)
     private BigDecimal price;
 
-    @Column(unique = false, nullable = false)
+    @Column(unique = false, nullable = true)
     private Integer stocks;
 
     @Column(unique = false, nullable = true)

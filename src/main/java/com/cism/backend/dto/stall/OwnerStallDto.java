@@ -45,7 +45,8 @@ public record OwnerStallDto(
         Integer sold,
         Integer previousSold,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        List<ItemVariationsResponse> variations
     ) {
     }
 
@@ -59,7 +60,8 @@ public record OwnerStallDto(
         Integer sold,
         Integer previousSold,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        List<ItemVariationsResponse> variations
     ) {
     }
 
@@ -73,7 +75,8 @@ public record OwnerStallDto(
         Integer sold,
         Integer previousSold,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        List<ItemVariationsResponse> variations
     ) {
     }
 

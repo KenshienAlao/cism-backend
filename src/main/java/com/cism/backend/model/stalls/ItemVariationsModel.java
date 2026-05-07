@@ -3,9 +3,9 @@ package com.cism.backend.model.stalls;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import com.cism.backend.model.admin.StallModel;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,33 +18,31 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-@Entity
 @Data
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "stall_incomes")
-public class StallIncomesModel {
-
+@Table(name = "item_variations")
+public class ItemVariationsModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "stall_id", nullable = false)
-    private StallModel stall;
+    @JoinColumn(name = "item_id", nullable = false)
+    private StallItemModel stallitem;
 
-    @Column(unique = false, nullable = false)
-    private BigDecimal income;
+    private String name;
 
-    @Column(unique = false, nullable = false)
-    private Instant earnedAt;
+    private BigDecimal price;
 
-    @Column(unique = false, nullable = false)
+    private Integer stock;
+
+    private String image;
+
     private Instant createdAt;
+    private Instant updatedAt;
 
 }
