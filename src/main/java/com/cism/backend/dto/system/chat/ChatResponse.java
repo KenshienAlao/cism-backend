@@ -4,13 +4,16 @@ import java.time.LocalDateTime;
 
 public record ChatResponse(
     Long id,
+    String conversationId,
     Long senderId,
     String senderName,
     Long stallId,
     Long customerId,
     String customerName,
     String content,
-    boolean isRead,
+    boolean readByCustomer,
+    boolean readByStall,
     boolean isDeleted,
+    boolean sentByStall,
     LocalDateTime createdAt
 ) {}

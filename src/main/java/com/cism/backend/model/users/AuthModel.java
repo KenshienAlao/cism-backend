@@ -12,7 +12,10 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.cism.backend.model.system.review.ReviewModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -37,6 +41,8 @@ public class AuthModel implements UserDetails {
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<ReviewModel> reviewList;
 
     @Column(unique = false, nullable = false)
@@ -59,6 +65,11 @@ public class AuthModel implements UserDetails {
 
     @Column(unique = false, nullable = true)
     private String avatar;
+
+    @Builder.Default
+    private boolean isOnline = false;
+
+    private LocalDateTime lastSeenAt;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

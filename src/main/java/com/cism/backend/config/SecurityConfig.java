@@ -50,6 +50,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/customer/cart/**").authenticated()
                         // Order
                         .requestMatchers("/api/customer/order/**").authenticated()
+                        // Chat
+                        .requestMatchers("/api/v1/chat/**").authenticated()
                         // WebSocket
                         .requestMatchers("/ws/**").permitAll()
                         

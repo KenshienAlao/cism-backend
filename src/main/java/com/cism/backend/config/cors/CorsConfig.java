@@ -28,8 +28,15 @@ public class CorsConfig {
         logger.info("Configuring CORS with allowed origins: {}", origins);
 
         config.setAllowedOrigins(origins);
-        config.setAllowedMethods(properties.allowedMethods());
-        config.setAllowedHeaders(properties.allowedHeaders());
+        
+        List<String> methods = properties.allowedMethods().stream()
+                .flatMap(method -> Arrays.stream(method.split(",")))
+                .map(String::trim)
+                .toList();
+        config.setAllowedMethods(methods);
+
+        config.setAllowedHeaders(List.of("*"));
+
         config.setAllowCredentials(properties.allowCredentials());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

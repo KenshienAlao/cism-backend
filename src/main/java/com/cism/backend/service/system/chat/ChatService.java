@@ -1,5 +1,7 @@
 package com.cism.backend.service.system.chat;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,14 +15,19 @@ import org.springframework.stereotype.Service;
 import com.cism.backend.dto.system.chat.ChatRequest;
 import com.cism.backend.dto.system.chat.ChatResponse;
 import com.cism.backend.dto.system.chat.ChatThreadResponse;
+import com.cism.backend.dto.system.chat.CustomerSearchResponse;
 import com.cism.backend.exception.BadrequestException;
 import com.cism.backend.model.admin.StallModel;
 import com.cism.backend.model.system.chat.ChatModel;
+import com.cism.backend.model.system.order.OrderModel;
 import com.cism.backend.model.users.AuthModel;
 import com.cism.backend.repository.admin.CreateStallRepository;
+import com.cism.backend.repository.system.OrderRepository;
 import com.cism.backend.repository.system.chat.ChatRepository;
 import com.cism.backend.repository.users.RegisterRepository;
 import com.cism.backend.util.CurrentUserLicence;
+import com.cism.backend.model.system.chat.ConversationModel;
+import com.cism.backend.repository.system.chat.ConversationRepository;
 
 @Service
 public class ChatService {
@@ -29,10 +36,16 @@ public class ChatService {
     private ChatRepository chatRepository;
 
     @Autowired
+    private ConversationRepository conversationRepository;
+
+    @Autowired
     private RegisterRepository registerRepository;
 
     @Autowired
     private CreateStallRepository stallRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Autowired
     private CurrentUserLicence currentUserLicence;
@@ -64,69 +77,75 @@ public class ChatService {
             sender = customer;
         }
 
+        // Find or create conversation
+        ConversationModel conversation = conversationRepository
+                .findByCustomer_IdAndStall_Id(customer.getId(), stall.getId())
+                .orElseGet(() -> {
+                    ConversationModel newConv = ConversationModel.builder()
+                            .customer(customer)
+                            .stall(stall)
+                            .build();
+                    return conversationRepository.save(newConv);
+                });
+
         ChatModel chat = ChatModel.builder()
+                .conversation(conversation)
                 .sender(sender)
                 .stall(stall)
                 .customer(customer)
                 .content(request.content())
-                .isRead(false)
+                .readByCustomer(!isStallOwner) // If customer sends, they've read it
+                .readByStall(isStallOwner) // If stall sends, they've read it
                 .build();
 
         chat = chatRepository.save(chat);
+
+        // Update last message time
+        conversation.setLastMessageAt(LocalDateTime.now());
+        conversationRepository.save(conversation);
+
         ChatResponse response = mapToResponse(chat);
 
-        // Send to customer if they are not the sender
-        if (sender == null || !sender.getId().equals(customer.getId())) {
-            messagingTemplate.convertAndSendToUser(
-                    customer.getEmail(),
-                    "/queue/chat",
-                    response);
-        }
-
-        // Broadcast to stall queue (for stall owners)
-        messagingTemplate.convertAndSendToUser(
-                stall.getLicence(),
-                "/queue/chat",
-                response);
-
-        // If customer is the sender, they also get the response on their end via REST,
-        // but we can also broadcast to them if they have multiple tabs.
-        if (sender != null && sender.getId().equals(customer.getId())) {
-            messagingTemplate.convertAndSendToUser(
-                    sender.getEmail(),
-                    "/queue/chat",
-                    response);
-        }
+        // Broadcast to both parties
+        messagingTemplate.convertAndSendToUser(customer.getEmail(), "/queue/chat", response);
+        messagingTemplate.convertAndSendToUser(stall.getLicence(), "/queue/chat", response);
 
         return response;
     }
 
-    public List<ChatResponse> getChatHistory(Long stallId, Long customerId) {
+    public List<ChatResponse> getChatHistory(Long stallId, Long customerId, String conversationId) {
         String currentUsername = currentUserLicence.getCurrentUserEmail();
 
+        if (conversationId != null) {
+            return chatRepository.findByConversation_ConversationIdOrderByCreatedAtAsc(conversationId)
+                    .stream()
+                    .filter(c -> {
+                        StallModel stall = c.getStall();
+                        boolean isOwner = stall.getLicence().equals(currentUsername);
+                        return isOwner ? !c.isDeletedForStall() : !c.isDeletedForCustomer();
+                    })
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
+
+        // Fallback to legacy ID-based fetch
         StallModel stall = stallRepository.findById(stallId)
                 .orElseThrow(() -> new BadrequestException("Stall not found", "STALL_NOT_FOUND"));
 
         boolean isOwner = stall.getLicence().equals(currentUsername);
 
         if (isOwner) {
-            if (customerId != null) {
-                return chatRepository.findByStall_IdAndCustomer_IdOrderByCreatedAtAsc(stallId, customerId)
-                        .stream()
-                        .map(this::mapToResponse)
-                        .collect(Collectors.toList());
-            } else {
-                return chatRepository.findByStall_IdOrderByCreatedAtAsc(stallId)
-                        .stream()
-                        .map(this::mapToResponse)
-                        .collect(Collectors.toList());
-            }
+            return chatRepository.findByStall_IdAndCustomer_IdOrderByCreatedAtAsc(stallId, customerId)
+                    .stream()
+                    .filter(c -> !c.isDeletedForStall())
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
         } else {
             AuthModel user = registerRepository.findByEmail(currentUsername)
                     .orElseThrow(() -> new BadrequestException("User not found", "USER_NOT_FOUND"));
-            // Customer can only see their own chat history with the stall
             return chatRepository.findByStall_IdAndCustomer_IdOrderByCreatedAtAsc(stallId, user.getId())
                     .stream()
+                    .filter(c -> !c.isDeletedForCustomer())
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
         }
@@ -142,141 +161,233 @@ public class ChatService {
         List<ChatModel> unreadMessages;
 
         if (isOwner) {
-            // Stall owner marks messages from a specific customer as read
             unreadMessages = chatRepository.findByStall_IdAndCustomer_IdOrderByCreatedAtAsc(stallId, customerId)
                     .stream()
-                    .filter(c -> !c.isRead() && c.getSender() != null) // Sender is the customer
+                    .filter(c -> !c.isReadByStall())
                     .collect(Collectors.toList());
+            unreadMessages.forEach(c -> c.setReadByStall(true));
         } else {
             AuthModel user = registerRepository.findByEmail(currentUsername)
                     .orElseThrow(() -> new BadrequestException("User not found", "USER_NOT_FOUND"));
-            // Customer marks messages from the stall as read
             unreadMessages = chatRepository.findByStall_IdAndCustomer_IdOrderByCreatedAtAsc(stallId, user.getId())
                     .stream()
-                    .filter(c -> !c.isRead() && c.getSender() == null) // Sender is the stall
+                    .filter(c -> !c.isReadByCustomer())
                     .collect(Collectors.toList());
+            unreadMessages.forEach(c -> c.setReadByCustomer(true));
         }
 
         if (!unreadMessages.isEmpty()) {
-            unreadMessages.forEach(c -> c.setRead(true));
             chatRepository.saveAll(unreadMessages);
 
-            // Broadcast read event via WebSocket
+            // Broadcast read receipt
             Map<String, Object> readEvent = new HashMap<>();
             readEvent.put("type", "READ_RECEIPT");
             readEvent.put("stallId", stallId);
-            if (isOwner) {
-                readEvent.put("customerId", customerId);
-                String targetUser = unreadMessages.get(0).getCustomer().getEmail();
-                messagingTemplate.convertAndSendToUser(targetUser, "/queue/chat", readEvent);
-            } else {
-                AuthModel user = registerRepository.findByEmail(currentUsername).orElse(null);
-                readEvent.put("customerId", user != null ? user.getId() : null);
-                readEvent.put("readerId", user != null ? user.getId() : null);
-                messagingTemplate.convertAndSendToUser(stall.getLicence(), "/queue/chat", readEvent);
-            }
+            readEvent.put("customerId", customerId != null ? customerId : unreadMessages.get(0).getCustomer().getId());
+            readEvent.put("sentByStall", isOwner);
+
+            messagingTemplate.convertAndSendToUser(unreadMessages.get(0).getCustomer().getEmail(), "/queue/chat",
+                    readEvent);
+            messagingTemplate.convertAndSendToUser(stall.getLicence(), "/queue/chat", readEvent);
         }
     }
 
     public List<ChatThreadResponse> getChatThreads() {
         String currentUsername = currentUserLicence.getCurrentUserEmail();
-
         List<ChatThreadResponse> threads = new ArrayList<>();
-        Map<String, ChatModel> latestMessagePerThread = new HashMap<>();
 
         boolean isStallOwner = stallRepository.findByLicence(currentUsername).isPresent();
 
         if (isStallOwner) {
-            stallRepository.findByLicence(currentUsername).ifPresent(stall -> {
-                List<ChatModel> stallChats = chatRepository.findByStall_IdOrderByCreatedAtDesc(stall.getId());
-                for (ChatModel chat : stallChats) {
-                    String threadKey = "stall_" + stall.getId() + "_customer_" + chat.getCustomer().getId();
-                    latestMessagePerThread.putIfAbsent(threadKey, chat);
+            StallModel stall = stallRepository.findByLicence(currentUsername).get();
+            List<ConversationModel> conversations = conversationRepository.findByStall_Id(stall.getId());
+            for (ConversationModel conv : conversations) {
+                ChatModel latest = chatRepository
+                        .findByStall_IdAndCustomer_IdOrderByCreatedAtAsc(stall.getId(), conv.getCustomer().getId())
+                        .stream().reduce((first, second) -> second).orElse(null);
+
+                if (latest != null) {
+                    boolean unread = !latest.isReadByStall();
+                    threads.add(mapToThreadResponse(conv, latest, unread));
                 }
-            });
+            }
         } else {
-            AuthModel user = registerRepository.findByEmail(currentUsername)
-                    .orElseThrow(() -> new BadrequestException("User not found", "USER_NOT_FOUND"));
-            List<ChatModel> customerChats = chatRepository.findByCustomer_IdOrderByCreatedAtDesc(user.getId());
-            for (ChatModel chat : customerChats) {
-                String threadKey = "stall_" + chat.getStall().getId() + "_customer_" + user.getId();
-                latestMessagePerThread.putIfAbsent(threadKey, chat);
+            AuthModel user = registerRepository.findByEmail(currentUsername).get();
+            List<ConversationModel> conversations = conversationRepository.findByCustomer_Id(user.getId());
+            for (ConversationModel conv : conversations) {
+                ChatModel latest = chatRepository
+                        .findByStall_IdAndCustomer_IdOrderByCreatedAtAsc(conv.getStall().getId(), user.getId())
+                        .stream().reduce((first, second) -> second).orElse(null);
+
+                if (latest != null) {
+                    boolean unread = !latest.isReadByCustomer();
+                    threads.add(mapToThreadResponse(conv, latest, unread));
+                }
             }
-        }
-
-        for (ChatModel latest : latestMessagePerThread.values()) {
-            boolean isSender = false;
-            if (isStallOwner) {
-                isSender = (latest.getSender() == null);
-            } else {
-                AuthModel user = registerRepository.findByEmail(currentUsername).orElse(null);
-                isSender = (latest.getSender() != null && user != null
-                        && latest.getSender().getId().equals(user.getId()));
-            }
-
-            String stallName = (latest.getStall().getUserList() != null && !latest.getStall().getUserList().isEmpty())
-                    ? latest.getStall().getUserList().get(0).getName()
-                    : "Stall " + latest.getStall().getLicence();
-
-            String stallImage = (latest.getStall().getUserList() != null && !latest.getStall().getUserList().isEmpty())
-                    ? latest.getStall().getUserList().get(0).getImage()
-                    : null;
-
-            threads.add(new ChatThreadResponse(
-                    latest.getStall().getId(),
-                    stallName,
-                    stallImage,
-                    latest.getCustomer().getId(),
-                    latest.getCustomer().getClientName(),
-                    latest.getCustomer().getAvatar(),
-                    latest.getContent(),
-                    latest.getCreatedAt(),
-                    !latest.isRead() && !isSender));
         }
 
         threads.sort((a, b) -> b.lastMessageAt().compareTo(a.lastMessageAt()));
         return threads;
     }
 
-    public ChatResponse deleteMessage(Long messageId) {
+    private ChatThreadResponse mapToThreadResponse(ConversationModel conv, ChatModel latest, boolean unread) {
+        String stallName = (conv.getStall().getUserList() != null && !conv.getStall().getUserList().isEmpty())
+                ? conv.getStall().getUserList().get(0).getName()
+                : "Stall " + conv.getStall().getLicence();
+
+        String stallImage = (conv.getStall().getUserList() != null && !conv.getStall().getUserList().isEmpty())
+                ? conv.getStall().getUserList().get(0).getImage()
+                : null;
+
+        return new ChatThreadResponse(
+                conv.getConversationId(),
+                conv.getStall().getId(),
+                stallName,
+                stallImage,
+                conv.getCustomer().getId(),
+                conv.getCustomer().getClientName(),
+                conv.getCustomer().getAvatar(),
+                latest.getContent(),
+                conv.getLastMessageAt() != null ? conv.getLastMessageAt() : latest.getCreatedAt(),
+                unread);
+    }
+
+    public List<CustomerSearchResponse> searchCustomers(String query) {
+        String currentUsername = currentUserLicence.getCurrentUserEmail();
+        StallModel stall = stallRepository.findByLicence(currentUsername)
+                .orElseThrow(() -> new BadrequestException("You are not a stall owner", "UNAUTHORIZED"));
+
+        List<ChatModel> stallChats = chatRepository.findByStall_IdOrderByCreatedAtDesc(stall.getId());
+        Map<Long, ChatModel> latestChatPerCustomer = new HashMap<>();
+        for (ChatModel chat : stallChats) {
+            latestChatPerCustomer.putIfAbsent(chat.getCustomer().getId(), chat);
+        }
+
+        List<OrderModel> stallOrders = orderRepository.findByStall_IdOrderByCreatedAtDesc(stall.getId());
+        Map<Long, OrderModel> latestOrderPerCustomer = new HashMap<>();
+        for (OrderModel order : stallOrders) {
+            latestOrderPerCustomer.putIfAbsent(order.getUser().getId(), order);
+        }
+
+        List<Long> allCustomerIds = new ArrayList<>(latestChatPerCustomer.keySet());
+        for (Long orderCustomerId : latestOrderPerCustomer.keySet()) {
+            if (!allCustomerIds.contains(orderCustomerId)) {
+                allCustomerIds.add(orderCustomerId);
+            }
+        }
+
+        List<CustomerSearchResponse> results = new ArrayList<>();
+        for (Long customerId : allCustomerIds) {
+            AuthModel customer = registerRepository.findById(customerId).orElse(null);
+            if (customer == null)
+                continue;
+
+            if (query != null && !query.isEmpty()
+                    && !customer.getClientName().toLowerCase().contains(query.toLowerCase())) {
+                continue;
+            }
+
+            ChatModel latestChat = latestChatPerCustomer.get(customerId);
+            OrderModel latestOrder = latestOrderPerCustomer.get(customerId);
+
+            String lastMsg = latestChat != null ? latestChat.getContent() : "Ordered " + latestOrder.getReceipt();
+            LocalDateTime lastTime = latestChat != null ? latestChat.getCreatedAt()
+                    : LocalDateTime.ofInstant(latestOrder.getCreatedAt(), ZoneId.systemDefault());
+
+            results.add(new CustomerSearchResponse(
+                    customer.getId(),
+                    customer.getClientName(),
+                    customer.getAvatar(),
+                    lastMsg,
+                    lastTime,
+                    latestChat != null));
+        }
+
+        results.sort((a, b) -> b.lastMessageAt().compareTo(a.lastMessageAt()));
+        return results;
+    }
+
+    public Map<String, Object> getPresence(String type, Long id) {
+        Map<String, Object> presence = new HashMap<>();
+        presence.put("id", id);
+        presence.put("userType", type);
+        presence.put("isOnline", false);
+        presence.put("lastSeenAt", null);
+
+        if ("STALL".equals(type)) {
+            stallRepository.findById(id).ifPresent(stall -> {
+                presence.put("isOnline", stall.isOnline());
+                presence.put("lastSeenAt", stall.getLastSeenAt());
+            });
+        } else {
+            registerRepository.findById(id).ifPresent(user -> {
+                presence.put("isOnline", user.isOnline());
+                presence.put("lastSeenAt", user.getLastSeenAt());
+            });
+        }
+        return presence;
+    }
+
+    public void updatePresence(String email, boolean isOnline) {
+        AuthModel user = registerRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            user.setOnline(isOnline);
+            user.setLastSeenAt(LocalDateTime.now());
+            registerRepository.save(user);
+            broadcastStatus(user.getId(), "CLIENT", isOnline);
+            return;
+        }
+
+        StallModel stall = stallRepository.findByLicence(email).orElse(null);
+        if (stall != null) {
+            stall.setOnline(isOnline);
+            stall.setLastSeenAt(LocalDateTime.now());
+            stallRepository.save(stall);
+            broadcastStatus(stall.getId(), "STALL", isOnline);
+        }
+    }
+
+    private void broadcastStatus(Long id, String type, boolean isOnline) {
+        Map<String, Object> statusEvent = new HashMap<>();
+        statusEvent.put("type", "PRESENCE_UPDATE");
+        statusEvent.put("id", id);
+        statusEvent.put("userType", type);
+        statusEvent.put("isOnline", isOnline);
+        statusEvent.put("lastSeenAt", LocalDateTime.now());
+
+        messagingTemplate.convertAndSend("/topic/presence", (Object) statusEvent);
+    }
+
+    public ChatResponse deleteMessage(Long messageId, boolean forMe) {
         String currentUsername = currentUserLicence.getCurrentUserEmail();
         ChatModel chat = chatRepository.findById(messageId)
                 .orElseThrow(() -> new BadrequestException("Message not found", "MESSAGE_NOT_FOUND"));
 
-        // Only the sender can delete their own message
         boolean isStallOwner = chat.getStall().getLicence().equals(currentUsername);
-        boolean isSender;
 
-        if (chat.getSender() != null) {
-            isSender = chat.getSender().getEmail().equals(currentUsername);
+        if (forMe) {
+            if (isStallOwner) {
+                chat.setDeletedForStall(true);
+            } else {
+                chat.setDeletedForCustomer(true);
+            }
         } else {
-            // Stall-sent message (sender is null) — only stall owner can delete
-            isSender = isStallOwner;
+            chat.setDeleted(true);
         }
 
-        if (!isSender) {
-            throw new BadrequestException("You can only remove your own messages", "NOT_MESSAGE_OWNER");
-        }
-
-        chat.setDeleted(true);
         chat = chatRepository.save(chat);
-
         ChatResponse response = mapToResponse(chat);
 
-        // Broadcast deletion to both parties
-        messagingTemplate.convertAndSendToUser(
-                chat.getCustomer().getEmail(),
-                "/queue/chat",
-                Map.of("type", "MESSAGE_DELETED", "messageId", messageId,
-                        "stallId", chat.getStall().getId(),
-                        "customerId", chat.getCustomer().getId()));
+        if (!forMe) {
+            Map<String, Object> deleteEvent = new HashMap<>();
+            deleteEvent.put("type", "MESSAGE_DELETED");
+            deleteEvent.put("messageId", messageId);
+            deleteEvent.put("conversationId",
+                    chat.getConversation() != null ? chat.getConversation().getConversationId() : null);
 
-        messagingTemplate.convertAndSendToUser(
-                chat.getStall().getLicence(),
-                "/queue/chat",
-                Map.of("type", "MESSAGE_DELETED", "messageId", messageId,
-                        "stallId", chat.getStall().getId(),
-                        "customerId", chat.getCustomer().getId()));
+            messagingTemplate.convertAndSendToUser(chat.getCustomer().getEmail(), "/queue/chat", deleteEvent);
+            messagingTemplate.convertAndSendToUser(chat.getStall().getLicence(), "/queue/chat", deleteEvent);
+        }
 
         return response;
     }
@@ -289,17 +400,21 @@ public class ChatService {
                         : "Stall " + chat.getStall().getLicence());
 
         String content = chat.isDeleted() ? "Message has been removed" : chat.getContent();
+        boolean sentByStall = (chat.getSender() == null);
 
         return new ChatResponse(
                 chat.getId(),
+                chat.getConversation() != null ? chat.getConversation().getConversationId() : null,
                 senderId,
                 senderName,
                 chat.getStall().getId(),
                 chat.getCustomer().getId(),
                 chat.getCustomer().getClientName(),
                 content,
-                chat.isRead(),
+                chat.isReadByCustomer(),
+                chat.isReadByStall(),
                 chat.isDeleted(),
+                sentByStall,
                 chat.getCreatedAt());
     }
 }

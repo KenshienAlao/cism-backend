@@ -1,6 +1,7 @@
 package com.cism.backend.model.system.chat;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.cism.backend.model.admin.StallModel;
 import com.cism.backend.model.users.AuthModel;
@@ -24,50 +25,31 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "chats")
-public class ChatModel {
+@Table(name = "conversations")
+public class ConversationModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "conversation_id", nullable = true)
-    private ConversationModel conversation;
-
-    @ManyToOne
-    @JoinColumn(name = "sender_id", nullable = true)
-    private AuthModel sender;
-
-    @ManyToOne
-    @JoinColumn(name = "stall_id", nullable = false)
-    private StallModel stall;
+    @Column(unique = true, nullable = false)
+    private String conversationId;
 
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
     private AuthModel customer;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String content;
-
-    @Builder.Default
-    private boolean readByCustomer = false;
-
-    @Builder.Default
-    private boolean readByStall = false;
-
-    @Builder.Default
-    private boolean isDeleted = false;
-
-    @Builder.Default
-    private boolean deletedForCustomer = false;
-
-    @Builder.Default
-    private boolean deletedForStall = false;
+    @ManyToOne
+    @JoinColumn(name = "stall_id", nullable = false)
+    private StallModel stall;
 
     private LocalDateTime createdAt;
+    private LocalDateTime lastMessageAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (conversationId == null) {
+            conversationId = UUID.randomUUID().toString();
+        }
     }
 }

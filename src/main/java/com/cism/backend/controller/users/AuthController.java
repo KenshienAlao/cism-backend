@@ -53,8 +53,8 @@ public class AuthController {
             throws Exception {
         LoginDto success = authService.loginService(entity);
 
-        cookieUtil.addCookie(response, "access_token", success.accessToken(), tokenProvider.getJwtExpirationInMs());
-        cookieUtil.addCookie(response, "refresh_token", success.refreshToken(),
+        cookieUtil.addCookie(response, "user_token", success.accessToken(), tokenProvider.getJwtExpirationInMs());
+        cookieUtil.addCookie(response, "user_refresh_token", success.refreshToken(),
                 tokenProvider.getRefreshTokenExpirationInMs());
 
         return ResponseEntity.ok(Api.ok("Login success", "LOGIN_SUCCESS", success));
@@ -62,8 +62,8 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Api<String>> logout(HttpServletResponse response) {
-        cookieUtil.clearCookie(response, "access_token");
-        cookieUtil.clearCookie(response, "refresh_token");
+        cookieUtil.clearCookie(response, "user_token");
+        cookieUtil.clearCookie(response, "user_refresh_token");
         return ResponseEntity.ok(Api.ok("Logged out successfully", "LOGOUT_SUCCESS", null));
     }
 
@@ -106,7 +106,7 @@ public class AuthController {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if ("refresh_token".equals(cookie.getName())) {
+                if ("user_refresh_token".equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
                     break;
                 }
@@ -115,8 +115,8 @@ public class AuthController {
 
         LoginDto success = authService.refreshAccessTokenService(refreshToken);
 
-        cookieUtil.addCookie(response, "access_token", success.accessToken(), tokenProvider.getJwtExpirationInMs());
-        cookieUtil.addCookie(response, "refresh_token", success.refreshToken(),
+        cookieUtil.addCookie(response, "user_token", success.accessToken(), tokenProvider.getJwtExpirationInMs());
+        cookieUtil.addCookie(response, "user_refresh_token", success.refreshToken(),
                 tokenProvider.getRefreshTokenExpirationInMs());
 
         return ResponseEntity.ok(Api.ok("Token refreshed", "TOKEN_REFRESH_SUCCESS", success));

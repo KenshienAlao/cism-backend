@@ -23,7 +23,7 @@ public class tokenStallService {
         String refreshToken = null;
         if (request.getCookies() != null) {
             for (var cookie : request.getCookies()){
-                if ("refresh_token".equals(cookie.getName())){
+                if ("stall_refresh_token".equals(cookie.getName())){
                     refreshToken = cookie.getValue();
                     break;
                 }
@@ -36,7 +36,7 @@ public class tokenStallService {
 
         String licence = jwtTokenProvider.getUsernameFromJWT(refreshToken);
         String newAccessToken = jwtTokenProvider.generateToken(licence);
-        cookieUtil.addCookie(response, "access_token", newAccessToken, jwtTokenProvider.getJwtExpirationInMs());        
+        cookieUtil.addCookie(response, "stall_token", newAccessToken, jwtTokenProvider.getJwtExpirationInMs());        
     }
 
 }

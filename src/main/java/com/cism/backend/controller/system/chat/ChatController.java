@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cism.backend.dto.system.chat.ChatRequest;
 import com.cism.backend.dto.system.chat.ChatResponse;
 import com.cism.backend.dto.system.chat.ChatThreadResponse;
+import com.cism.backend.dto.system.chat.CustomerSearchResponse;
 import com.cism.backend.service.system.chat.ChatService;
 
 @RestController
@@ -34,8 +35,9 @@ public class ChatController {
     @GetMapping("/stall/{stallId}")
     public ResponseEntity<List<ChatResponse>> getChatHistory(
             @PathVariable Long stallId,
-            @RequestParam(required = false) Long customerId) {
-        return ResponseEntity.ok(chatService.getChatHistory(stallId, customerId));
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(required = false) String conversationId) {
+        return ResponseEntity.ok(chatService.getChatHistory(stallId, customerId, conversationId));
     }
 
     @GetMapping("/threads")
@@ -52,7 +54,18 @@ public class ChatController {
     }
 
     @DeleteMapping("/{messageId}")
-    public ResponseEntity<ChatResponse> deleteMessage(@PathVariable Long messageId) {
-        return ResponseEntity.ok(chatService.deleteMessage(messageId));
+    public ResponseEntity<ChatResponse> deleteMessage(
+            @PathVariable Long messageId,
+            @RequestParam(required = false, defaultValue = "false") boolean forMe) {
+        return ResponseEntity.ok(chatService.deleteMessage(messageId, forMe));
+    }
+
+    @GetMapping("/search-customers")
+    public ResponseEntity<List<CustomerSearchResponse>> searchCustomers(@RequestParam String query) {
+        return ResponseEntity.ok(chatService.searchCustomers(query));
+    }
+    @GetMapping("/presence/{type}/{id}")
+    public ResponseEntity<java.util.Map<String, Object>> getPresence(@PathVariable String type, @PathVariable Long id) {
+        return ResponseEntity.ok(chatService.getPresence(type, id));
     }
 }

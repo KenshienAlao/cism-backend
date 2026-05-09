@@ -22,7 +22,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -44,18 +46,26 @@ public class StallModel implements UserDetails {
 
     @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<StallItemModel> itemList;
 
     @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<StallUsersModel> userList;
 
     @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<ReviewModel> reviewList;
 
     @OneToMany(mappedBy = "stall", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<StallIncomesModel> incomeList;
 
     @Column(unique = true, nullable = false)
@@ -66,6 +76,11 @@ public class StallModel implements UserDetails {
     @Column(nullable = false)
     @CreationTimestamp
     private Instant createdAt;
+
+    @Builder.Default
+    private boolean isOnline = false;
+
+    private java.time.LocalDateTime lastSeenAt;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

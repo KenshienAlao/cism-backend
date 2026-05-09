@@ -2,15 +2,11 @@ package com.cism.backend.dto.system.chat;
 
 import java.time.LocalDateTime;
 
-public record ChatThreadResponse(
-    String conversationId,
-    Long stallId,
-    String stallName,
-    String stallImage,
+public record CustomerSearchResponse(
     Long customerId,
     String customerName,
     String customerImage,
     String lastMessage,
     LocalDateTime lastMessageAt,
-    boolean isUnread
+    boolean hasThread
 ) {}

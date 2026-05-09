@@ -50,10 +50,17 @@ public class AuthStallController {
         LoginStallResponseDto success = authStallService.loginStallService(entity);
 
 
-        cookieUtil.addCookie(response, "access_token", success.accessToken(), jwtTokenProvider.getJwtExpirationInMs());
-        cookieUtil.addCookie(response, "refresh_token", success.refreshToken(), jwtTokenProvider.getRefreshTokenExpirationInMs());
+        cookieUtil.addCookie(response, "stall_token", success.accessToken(), jwtTokenProvider.getJwtExpirationInMs());
+        cookieUtil.addCookie(response, "stall_refresh_token", success.refreshToken(), jwtTokenProvider.getRefreshTokenExpirationInMs());
 
         return ResponseEntity.ok(Api.ok("Login Success", "LOGIN_SUCCESS", success));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Api<String>> logout(HttpServletResponse response) {
+        cookieUtil.clearCookie(response, "stall_token");
+        cookieUtil.clearCookie(response, "stall_refresh_token");
+        return ResponseEntity.ok(Api.ok("Logged out successfully", "LOGOUT_SUCCESS", null));
     }
 
     @GetMapping("/get-profile")

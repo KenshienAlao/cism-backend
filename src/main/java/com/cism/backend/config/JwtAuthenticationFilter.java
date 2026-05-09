@@ -64,11 +64,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Cookies
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
+            String requestUri = request.getRequestURI();
+            String stallToken = null;
+            String userToken = null;
+
             for (Cookie cookie : cookies) {
-                if ("access_token".equals(cookie.getName())) {
-                    return cookie.getValue();
+                if ("stall_token".equals(cookie.getName())) {
+                    stallToken = cookie.getValue();
+                } else if ("user_token".equals(cookie.getName())) {
+                    userToken = cookie.getValue();
                 }
             }
+
+            String appType = request.getHeader("X-App-Type");
+            if (appType == null) {
+                appType = request.getParameter("appType");
+            }
+            if ("stall".equalsIgnoreCase(appType)) {
+                return stallToken != null ? stallToken : userToken;
+            } else if ("client".equalsIgnoreCase(appType)) {
+                return userToken != null ? userToken : stallToken;
+            }
+
+            // Prioritize stall_token for stall-related endpoints if header is missing
+            if (requestUri.contains("/stall") || requestUri.contains("/owner")) {
+                return stallToken != null ? stallToken : userToken;
+            }
+            return userToken != null ? userToken : stallToken;
         }
 
         return null;
