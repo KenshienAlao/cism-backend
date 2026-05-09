@@ -179,7 +179,6 @@ public class ChatService {
         if (!unreadMessages.isEmpty()) {
             chatRepository.saveAll(unreadMessages);
 
-            // Broadcast read receipt
             Map<String, Object> readEvent = new HashMap<>();
             readEvent.put("type", "READ_RECEIPT");
             readEvent.put("stallId", stallId);
