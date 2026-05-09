@@ -178,7 +178,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse    cancelOrder(Long orderId) {
+    public OrderResponse cancelOrder(Long orderId) {
         OrderModel order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BadrequestException("Order not found", "ORDER_NOT_FOUND"));
 
