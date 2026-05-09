@@ -27,7 +27,7 @@ import com.cism.backend.repository.system.chat.ChatRepository;
 import com.cism.backend.repository.users.RegisterRepository;
 import com.cism.backend.util.CurrentUserLicence;
 
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
 
 import com.cism.backend.model.system.chat.ConversationModel;
 import com.cism.backend.repository.system.chat.ConversationRepository;
@@ -117,12 +117,10 @@ public class ChatService {
         return response;
     }
 
-    @Transactional(readOnly = true)
     public List<ChatResponse> getChatHistory(Long stallId, Long customerId, String conversationId) {
         String currentUsername = currentUserLicence.getCurrentUserEmail();
 
-        if (conversationId != null && !conversationId.trim().isEmpty() && !conversationId.equals("undefined")
-                && !conversationId.equals("null")) {
+        if (conversationId != null) {
             return chatRepository.findByConversation_ConversationIdOrderByCreatedAtAsc(conversationId)
                     .stream()
                     .filter(c -> {
@@ -157,7 +155,6 @@ public class ChatService {
         }
     }
 
-    @Transactional(readOnly = true)
     public void markMessagesAsRead(Long stallId, Long customerId) {
         String currentUsername = currentUserLicence.getCurrentUserEmail();
 
@@ -198,7 +195,6 @@ public class ChatService {
         }
     }
 
-    @Transactional(readOnly = true)
     public List<ChatThreadResponse> getChatThreads() {
         String currentUsername = currentUserLicence.getCurrentUserEmail();
         List<ChatThreadResponse> threads = new ArrayList<>();
@@ -237,7 +233,6 @@ public class ChatService {
         return threads;
     }
 
-
     private ChatThreadResponse mapToThreadResponse(ConversationModel conv, ChatModel latest, boolean unread) {
         String stallName = (conv.getStall().getUserList() != null && !conv.getStall().getUserList().isEmpty())
                 ? conv.getStall().getUserList().get(0).getName()
@@ -260,7 +255,6 @@ public class ChatService {
                 unread);
     }
 
-    @Transactional(readOnly = true)
     public List<CustomerSearchResponse> searchCustomers(String query) {
         String currentUsername = currentUserLicence.getCurrentUserEmail();
         StallModel stall = stallRepository.findByLicence(currentUsername)
@@ -316,7 +310,6 @@ public class ChatService {
         return results;
     }
 
-    @Transactional(readOnly = true)
     public Map<String, Object> getPresence(String type, Long id) {
         Map<String, Object> presence = new HashMap<>();
         presence.put("id", id);
