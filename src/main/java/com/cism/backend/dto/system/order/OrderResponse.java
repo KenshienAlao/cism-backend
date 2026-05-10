@@ -5,8 +5,8 @@ import java.time.Instant;
 import java.util.List;
 
 public record OrderResponse(
-    Long id,
-    String receipt,
+    String id,
+    String orderCode,
     BigDecimal subtotal,
     BigDecimal deliveryFee,
     BigDecimal totalAmount,
@@ -14,7 +14,10 @@ public record OrderResponse(
     String paymentMethod,
     String status,
     String note,
+    String cancelReason,
     Instant createdAt,
     String stallName,
+    String stallImage,
+    Long stallId,
     List<OrderItemResponse> orderItems
 ) {}

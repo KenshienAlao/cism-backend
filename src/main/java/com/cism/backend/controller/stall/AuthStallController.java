@@ -22,36 +22,34 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
-
 @RestController
 @RequestMapping("/api/auth/stall")
 public class AuthStallController {
-    
 
     @Autowired
     private CookieUtil cookieUtil;
-    
+
     @Autowired
     private AuthStallService authStallService;
 
     @Autowired
     private ProfileStallService profileStallService;
-    
+
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-    
+
     @Autowired
     private tokenStallService tokenStallService;
 
     @PostMapping("/login")
-    public ResponseEntity<Api<LoginStallResponseDto>> loginStall(@RequestBody LoginStallDto entity, HttpServletResponse response) throws Exception {
+    public ResponseEntity<Api<LoginStallResponseDto>> loginStall(@RequestBody LoginStallDto entity,
+            HttpServletResponse response) throws Exception {
 
         LoginStallResponseDto success = authStallService.loginStallService(entity);
 
-
         cookieUtil.addCookie(response, "stall_token", success.accessToken(), jwtTokenProvider.getJwtExpirationInMs());
-        cookieUtil.addCookie(response, "stall_refresh_token", success.refreshToken(), jwtTokenProvider.getRefreshTokenExpirationInMs());
+        cookieUtil.addCookie(response, "stall_refresh_token", success.refreshToken(),
+                jwtTokenProvider.getRefreshTokenExpirationInMs());
 
         return ResponseEntity.ok(Api.ok("Login Success", "LOGIN_SUCCESS", success));
     }
@@ -70,19 +68,18 @@ public class AuthStallController {
     }
 
     @GetMapping("/validate-cookie")
-    public ResponseEntity <Api<String>> validateCookie() {
+    public ResponseEntity<Api<String>> validateCookie() {
         if (!authStallService.validateCookieService()) {
             return ResponseEntity.ok(Api.ok("Cookie is not valid", "COOKIE_NOT_VALID", null));
         }
 
         return ResponseEntity.ok(Api.ok("Cookie is valid", "COOKIE_VALID", null));
     }
-    
+
     @GetMapping("/refresh-token")
     public ResponseEntity<Api<String>> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         tokenStallService.refreshTokenService(request, response);
         return ResponseEntity.ok(Api.ok("token", "TOKEN_OK", null));
     }
-    
 
 }

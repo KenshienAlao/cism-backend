@@ -62,6 +62,7 @@ public class ItemService {
                                                                 r.getUsers().getRole()) : null,
                                                 r.getStar(),
                                                 r.getComment(),
+                                                r.getImage(),
                                                 r.getCreateAt()))
                                 .toList();
 

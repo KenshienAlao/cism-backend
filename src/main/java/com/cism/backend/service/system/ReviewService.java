@@ -12,6 +12,7 @@ import com.cism.backend.model.users.AuthModel;
 import com.cism.backend.model.stalls.StallItemModel;
 import com.cism.backend.repository.admin.CreateStallRepository;
 import com.cism.backend.repository.stalls.StallItemRepository;
+import com.cism.backend.service.users.FileStorageService;
 import com.cism.backend.repository.system.ReviewRepository;
 import com.cism.backend.repository.users.RegisterRepository;
 import com.cism.backend.util.CurrentUserLicence;
@@ -20,7 +21,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.Instant;
 import java.util.List;
-
 import jakarta.transaction.Transactional;
 
 @Service
@@ -43,6 +43,9 @@ public class ReviewService {
 
     @Autowired
     private StallItemRepository stallItemRepository;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -68,7 +71,7 @@ public class ReviewService {
             throw new BadrequestException("Item not found", "ITEM_NOT_FOUND");
         }
 
-        if (isBlack.isBlank(entity.comment()) || isBlack.isBlankInteger(entity.star())) {
+        if (isBlack.isBlankInteger(entity.star())) {
             throw new BadrequestException("Invalid review data", "INVALID_REVIEW_DATA");
         }
 
@@ -80,12 +83,22 @@ public class ReviewService {
         StallItemModel item = stallItemRepository.findById(entity.itemId())
                 .orElseThrow(() -> new BadrequestException("Item not found", "ITEM_NOT_FOUND"));
 
+        String imageUrl = null;
+        try {
+            if (entity.image() != null && !entity.image().isEmpty()) {
+                imageUrl = fileStorageService.reviewImage(entity.image());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         ReviewModel review = ReviewModel.builder()
                 .stall(stall)
                 .users(user)
                 .stallitem(item)
                 .star(entity.star())
                 .comment(entity.comment())
+                .image(imageUrl)
                 .createAt(Instant.now())
                 .build();
 
@@ -127,6 +140,7 @@ public class ReviewService {
                 entity.getComment(),
                 entity.getStar(),
                 entity.getStallitem().getId(),
+                entity.getImage(),
                 entity.getCreateAt());
     }
 

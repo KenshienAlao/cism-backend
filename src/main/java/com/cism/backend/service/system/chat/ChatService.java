@@ -293,7 +293,7 @@ public class ChatService {
             ChatModel latestChat = latestChatPerCustomer.get(customerId);
             OrderModel latestOrder = latestOrderPerCustomer.get(customerId);
 
-            String lastMsg = latestChat != null ? latestChat.getContent() : "Ordered " + latestOrder.getReceipt();
+            String lastMsg = latestChat != null ? latestChat.getContent() : "Ordered " + latestOrder.getOrderCode();
             LocalDateTime lastTime = latestChat != null ? latestChat.getCreatedAt()
                     : LocalDateTime.ofInstant(latestOrder.getCreatedAt(), ZoneId.systemDefault());
 

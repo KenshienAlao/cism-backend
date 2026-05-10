@@ -36,19 +36,25 @@ public class OrderController {
     }
 
     @PostMapping("/cancel-order/{id}")
-    public ResponseEntity<Api<OrderResponse>> cancelOrder(@PathVariable Long id) {
+    public ResponseEntity<Api<OrderResponse>> cancelOrder(@PathVariable String id) {
         OrderResponse success = orderService.cancelOrder(id);
         return ResponseEntity.ok(Api.ok("Order cancelled successfully", "ORDER_CANCELLED", success));
     }
 
     @GetMapping("/my-orders/{id}")
-    public ResponseEntity<Api<OrderResponse>> getOrderById(@PathVariable Long id) {
+    public ResponseEntity<Api<OrderResponse>> getOrderById(@PathVariable String id) {
         OrderResponse success = orderService.getOrderById(id);
         return ResponseEntity.ok(Api.ok("Order retrieved successfully", "ORDER_RETRIEVED", success));
     }
 
+    @PostMapping("/receive-order/{id}")
+    public ResponseEntity<Api<OrderResponse>> receiveOrder(@PathVariable String id) {
+        OrderResponse success = orderService.updateOrderStatus(id, "COMPLETED");
+        return ResponseEntity.ok(Api.ok("Order marked as received", "ORDER_RECEIVED", success));
+    }
+
     @PostMapping("/delete-order/{id}")
-    public ResponseEntity<Api<String>> deleteOrder(@PathVariable Long id) {
+    public ResponseEntity<Api<String>> deleteOrder(@PathVariable String id) {
         orderService.deleteOrder(id);
         return ResponseEntity.ok(Api.ok("Order deleted successfully", "ORDER_DELETED", "SUCCESS"));
     }

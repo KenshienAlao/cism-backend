@@ -15,12 +15,11 @@ import com.cism.backend.model.users.AuthModel;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,8 +34,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "orders")
 public class OrderModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(updatable = false, nullable = false)
+    private String id;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -49,7 +48,10 @@ public class OrderModel {
     private StallModel stall;
 
     @Column(nullable = false)
-    private String receipt;
+    private String orderCode;
+
+    @Column(nullable = false)
+    private String trackingToken;
 
     @Column(nullable = false)
     private BigDecimal subtotal;
@@ -69,14 +71,33 @@ public class OrderModel {
     @Column(nullable = false)
     private String status; // PENDING, PREPARING, READY, COMPLETED, CANCELLED
 
+    @Column(nullable = true)
     private String note;
+
+    @Column(nullable = true)
+    private String cancelReason;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemModel> orderItems;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean deletedByCustomer = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean deletedByStall = false;
 
     @CreationTimestamp
     private Instant createdAt;
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.id == null) {
+            this.id = java.util.UUID.randomUUID().toString();
+        }
+    }
 }

@@ -52,8 +52,11 @@ public class ReviewModel {
     @Column(unique = false, nullable = false)
     private Integer star;
 
-    @Column(unique = false, nullable = false)
+    @Column(unique = false, nullable = true)
     private String comment;
+
+    @Column(nullable = true)
+    private String image;
 
     @Column(unique = false, nullable = false)
     private Instant createAt;

@@ -13,9 +13,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
@@ -32,8 +32,7 @@ public class ReviewController {
     }
 
     @PostMapping("/review-item")
-    public ResponseEntity<Api<ReviewResponse>> reviewItem(@RequestBody ReviewRequest entity) throws Exception {
-        System.out.println("Review : " + entity);
+    public ResponseEntity<Api<ReviewResponse>> reviewItem(@ModelAttribute ReviewRequest entity) throws Exception {
         ReviewResponse success = reviewService.createReviewService(entity);
         return ResponseEntity.ok(Api.ok("Review item success", "REVIEW_ITEM_SUCCESS", success));
     }

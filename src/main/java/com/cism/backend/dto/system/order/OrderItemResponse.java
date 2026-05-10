@@ -8,5 +8,6 @@ public record OrderItemResponse(
     String variationName,
     Integer quantity,
     BigDecimal priceAtPurchase,
-    String image
+    String image,
+    Long itemId
 ) {}

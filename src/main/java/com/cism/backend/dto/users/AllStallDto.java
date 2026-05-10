@@ -25,6 +25,7 @@ public record AllStallDto(
                         User user,
                         Integer star,
                         String comment,
+                        String image,
                         java.time.Instant createdAt) {
         }
 

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cism.backend.dto.common.Api;
 import com.cism.backend.dto.system.order.OrderResponse;
 import com.cism.backend.service.system.OrderService;
+import com.cism.backend.util.CurrentUserLicence;
 
 @RestController
 @RequestMapping("/api/stall/order")
@@ -22,17 +23,28 @@ public class StallOrderController {
     @Autowired
     private OrderService orderService;
 
-    @GetMapping("/stall/{stallId}")
-    public ResponseEntity<Api<List<OrderResponse>>> getStallOrders(@PathVariable Long stallId) {
+    @Autowired
+    private CurrentUserLicence currentUserLicence;
+
+    @GetMapping("/my-orders")
+    public ResponseEntity<Api<List<OrderResponse>>> getMyStallOrders() {
+        Long stallId = currentUserLicence.getStall().getId();
         List<OrderResponse> success = orderService.getStallOrders(stallId);
         return ResponseEntity.ok(Api.ok("Stall orders retrieved successfully", "STALL_ORDERS_RETRIEVED", success));
     }
 
     @PostMapping("/update-status/{id}")
     public ResponseEntity<Api<OrderResponse>> updateOrderStatus(
-            @PathVariable Long id,
-            @RequestParam String status) {
-        OrderResponse success = orderService.updateOrderStatus(id, status);
+            @PathVariable String id,
+            @RequestParam String status,
+            @RequestParam(required = false) String reason) {
+        OrderResponse success = orderService.updateOrderStatus(id, status, reason);
         return ResponseEntity.ok(Api.ok("Order status updated successfully", "ORDER_STATUS_UPDATED", success));
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public ResponseEntity<Api<String>> deleteOrder(@PathVariable String id) {
+        orderService.stallDeleteOrder(id);
+        return ResponseEntity.ok(Api.ok("Order deleted from stall view", "ORDER_DELETED", null));
     }
 }
