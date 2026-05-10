@@ -15,6 +15,7 @@ public record OrderResponse(
     String status,
     String note,
     String cancelReason,
+    String cancelledBy,
     Instant createdAt,
     String stallName,
     String stallImage,

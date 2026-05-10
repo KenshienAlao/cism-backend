@@ -244,7 +244,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse cancelOrder(String orderId) {
+    public OrderResponse cancelOrder(String orderId, String reason) {
         OrderModel order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BadrequestException("Order not found", "ORDER_NOT_FOUND"));
 
@@ -257,8 +257,10 @@ public class OrderService {
         }
 
         order.setStatus("CANCELLED");
-
-        // No need to restore stock here because stock is only deducted upon completion.
+        order.setCancelledBy("CUSTOMER");
+        if (reason != null) {
+            order.setCancelReason(reason);
+        }
 
         OrderResponse response = mapToOrderResponse(orderRepository.save(order));
 
@@ -332,6 +334,7 @@ public class OrderService {
         order.setStatus(targetStatus);
         if ("CANCELLED".equals(targetStatus) && reason != null) {
             order.setCancelReason(reason);
+            order.setCancelledBy("STALL");
         }
 
         OrderResponse response = mapToOrderResponse(orderRepository.save(order));
@@ -413,6 +416,7 @@ public class OrderService {
                 order.getStatus(),
                 order.getNote(),
                 order.getCancelReason(),
+                order.getCancelledBy(),
                 order.getCreatedAt(),
                 stallName,
                 stallImage,

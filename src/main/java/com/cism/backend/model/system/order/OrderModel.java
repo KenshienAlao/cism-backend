@@ -88,6 +88,9 @@ public class OrderModel {
     @Column(nullable = false)
     private boolean deletedByStall = false;
 
+    @Column(nullable = true)
+    private String cancelledBy; // CUSTOMER, STALL
+
     @CreationTimestamp
     private Instant createdAt;
 

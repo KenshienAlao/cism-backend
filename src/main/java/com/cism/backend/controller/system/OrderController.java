@@ -36,8 +36,10 @@ public class OrderController {
     }
 
     @PostMapping("/cancel-order/{id}")
-    public ResponseEntity<Api<OrderResponse>> cancelOrder(@PathVariable String id) {
-        OrderResponse success = orderService.cancelOrder(id);
+    public ResponseEntity<Api<OrderResponse>> cancelOrder(
+            @PathVariable String id,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String reason) {
+        OrderResponse success = orderService.cancelOrder(id, reason);
         return ResponseEntity.ok(Api.ok("Order cancelled successfully", "ORDER_CANCELLED", success));
     }
 
