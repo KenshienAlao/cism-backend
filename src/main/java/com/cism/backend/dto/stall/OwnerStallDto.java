@@ -80,13 +80,19 @@ public record OwnerStallDto(
     ) {
     }
 
+    public record ReviewerModel(
+        String clientName,
+        String avatar
+    ) {}
+
     public record ReviewModel(
         Long id,
         Long itemId,
         Long userId,
         Integer star,
         String comment,
-        Instant createdAt
+        Instant createdAt,
+        ReviewerModel user
     ) {}
 
     public record IncomesModel(

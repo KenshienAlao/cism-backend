@@ -192,7 +192,14 @@ public class ProfileStallService {
                                 r.getUsers().getId(),
                                 r.getStar(),
                                 r.getComment(),
-                                r.getCreateAt());
+                                r.getCreateAt(),
+                                mapReviewer(r.getUsers()));
+        }
+
+        private OwnerStallDto.ReviewerModel mapReviewer(com.cism.backend.model.users.AuthModel u) {
+                return new OwnerStallDto.ReviewerModel(
+                                u.getClientName(),
+                                u.getAvatar());
         }
 
         private OwnerStallDto.IncomesModel mapIncomes(StallIncomesModel i) {
